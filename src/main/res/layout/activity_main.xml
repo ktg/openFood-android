@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	tools:context="uk.ac.nott.mrl.openfood.logging.MainActivity">
+
+	<android.support.v7.widget.Toolbar
+		android:id="@+id/toolbar"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:background="?attr/colorPrimary"
+		android:elevation="2dp"
+		android:theme="@style/Base.ThemeOverlay.AppCompat.Dark.ActionBar"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toTopOf="parent" />
+
+	<Switch
+		android:id="@+id/loggingSwitch"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginBottom="0dp"
+		android:layout_marginEnd="0dp"
+		android:layout_marginStart="0dp"
+		android:layout_marginTop="16dp"
+		android:padding="16dp"
+		android:text="Logging"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent" />
+
+	<android.support.v7.widget.RecyclerView
+		android:id="@+id/sensorList"
+		android:layout_width="0dp"
+		android:layout_height="0dp"
+		app:layout_constraintBottom_toTopOf="@+id/loggingSwitch"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toBottomOf="@+id/toolbar">
+
+	</android.support.v7.widget.RecyclerView>
+
+
+</android.support.constraint.ConstraintLayout>

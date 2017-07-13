@@ -1,0 +1,54 @@
+buildscript {
+	ext.kotlin_version = '1.1.3'
+	repositories {
+		maven { url 'https://maven.google.com' }
+		jcenter()
+	}
+	dependencies {
+		classpath 'com.android.tools.build:gradle:3.0.0-alpha6'
+		classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+	}
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+repositories {
+	ivy {
+		url "https://mbientlab.com/releases/ivyrep"
+		layout "gradle"
+	}
+	maven { url 'https://maven.google.com' }
+	jcenter()
+}
+
+android {
+	compileSdkVersion 26
+	buildToolsVersion "26.0.0"
+	compileOptions {
+		sourceCompatibility JavaVersion.VERSION_1_8
+		targetCompatibility JavaVersion.VERSION_1_8
+	}
+	defaultConfig {
+		applicationId "uk.ac.nott.mrl.openfood.logging"
+		minSdkVersion 21
+		targetSdkVersion 26
+		versionCode 1
+		versionName "1.0"
+	}
+	buildTypes {
+		release {
+			minifyEnabled false
+			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+		}
+	}
+}
+
+dependencies {
+	implementation 'com.mbientlab:metawear:3.0.32'
+	implementation 'com.android.support:appcompat-v7:25.3.1'
+	implementation 'com.android.support:recyclerview-v7:25.3.1'
+	implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+	implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+}
