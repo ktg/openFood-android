@@ -41,25 +41,11 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 		val rootView = view
 
 		fun setBoard(scan: ScanResult) {
-			if(names.containsKey(scan.device.address)) {
-				rootView.macAddressText.text = names[scan.device.address]
-			} else {
-				rootView.macAddressText.text = scan.device.name
-			}
-			rootView.statusText.text = scan.device.address
+			rootView.nameText.text = scan.device.name
+			rootView.macAddressText.text = scan.device.address
 			//Log.i("TIME", "Time: " + (SystemClock.elapsedRealtimeNanos() - scan.timestampNanos))
 			if (boards.containsKey(scan.device.address)) {
-				if (SystemClock.elapsedRealtimeNanos() - scan.timestampNanos > 10000000000) {
-					rootView.signalIcon.setImageResource(R.drawable.ic_signal_cellular_connected_no_internet_0_bar_black_24dp)
-				} else if (scan.rssi < -96) {
-					rootView.signalIcon.setImageResource(R.drawable.ic_signal_cellular_connected_no_internet_1_bar_black_24dp)
-				} else if (scan.rssi < -80) {
-					rootView.signalIcon.setImageResource(R.drawable.ic_signal_cellular_connected_no_internet_2_bar_black_24dp)
-				} else if (scan.rssi < -64) {
-					rootView.signalIcon.setImageResource(R.drawable.ic_signal_cellular_connected_no_internet_3_bar_black_24dp)
-				} else {
-					rootView.signalIcon.setImageResource(R.drawable.ic_signal_cellular_connected_no_internet_4_bar_black_24dp)
-				}
+				rootView.signalIcon.setImageResource(R.drawable.ic_router_black_24dp)
 			} else {
 				if (SystemClock.elapsedRealtimeNanos() - scan.timestampNanos > 10000000000) {
 					rootView.signalIcon.setImageResource(R.drawable.ic_signal_cellular_0_bar_black_24dp)
@@ -76,7 +62,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 			rootView.checkBox.isEnabled = true
 			rootView.checkBox.isChecked = addresses.contains(scan.device.address)
 			rootView.setOnClickListener { view ->
-				val address = view.statusText.text.toString()
+				val address = view.macAddressText.text.toString()
 				if (addresses.contains(address)) {
 					addresses.remove(address)
 					boards[address]?.let { disconnectFromBoard(it) }
@@ -89,20 +75,18 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 						startLogging()
 					}
 				}
+				getSharedPreferences(preferences, 0).edit().putStringSet("addresses", addresses).commit()
 				view.checkBox.isChecked = addresses.contains(address)
 			}
 		}
 	}
 
 	companion object {
+		val preferences = "OF-LOG-PREFS"
 		val boards = mutableMapOf<String, MetaWearBoard>()
 		val addresses = mutableSetOf<String>()
 		var logging = false
 		var writer: FileWriter? = null
-		val names = mapOf(
-				"DF:CF:A8:49:9F:4A" to "OF Test",
-				"C8:5F:91:F8:A8:A6" to "OF Spatula",
-				"E4:54:1D:F2:2F:4B" to "OF Soy")
 	}
 
 	private val PERMISSION_CODE = 4572
@@ -144,18 +128,19 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 	override fun onServiceConnected(className: ComponentName, service: IBinder) {
 		btleService = service as BtleService.LocalBinder
 		bound = true
-		loggingSwitch.isEnabled = true
+		loggingButton.isEnabled = true
 	}
 
 	override fun onServiceDisconnected(arg0: ComponentName) {
-		loggingSwitch.isEnabled = false
+		stopLogging()
+		loggingButton.isEnabled = false
 		bound = false
 	}
 
 	override fun onStart() {
 		super.onStart()
 		bindService(Intent(this, BtleService::class.java), this, Context.BIND_AUTO_CREATE)
-		//bindService(Intent(this, LoggingService::class.java), this, Context.BIND_AUTO_CREATE)
+		addresses.addAll(getSharedPreferences(preferences, 0).getStringSet("addresses", mutableSetOf()))
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 			Log.i(TAG, "Request permission")
 			ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS), PERMISSION_CODE)
@@ -175,6 +160,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 		Log.i(TAG, "Disconnecting from " + board.macAddress)
 		board.tearDown()
 		board.getModule(Led::class.java).stop(true)
+		board.disconnectAsync()
 		boards.remove(board.macAddress)
 	}
 
@@ -189,12 +175,12 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 		sensorList.layoutManager = LinearLayoutManager(this)
 		sensorList.adapter = adapter
 
-		loggingSwitch.isEnabled = false
-		loggingSwitch.setOnCheckedChangeListener { _, checked ->
-			if (checked) {
-				startLogging()
-			} else {
+		loggingButton.isEnabled = false
+		loggingButton.setOnClickListener {
+			if (logging) {
 				stopLogging()
+			} else {
+				startLogging()
 			}
 		}
 	}
@@ -231,7 +217,8 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 			}
 			if (!boards.isEmpty()) {
 				logging = true
-				loggingSwitch.isChecked = true
+				loggingButton.setImageResource(R.drawable.ic_stop_black_24dp)
+				loggingProgress.visibility = View.VISIBLE
 			}
 		}
 		adapter.notifyDataSetChanged()
@@ -246,7 +233,8 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 
 		Log.i(TAG, "Stopping logging")
 
-		loggingSwitch.isChecked = false
+		loggingButton.setImageResource(R.drawable.ic_play_arrow_black_24dp)
+		loggingProgress.visibility = View.INVISIBLE
 
 		val boardList = ArrayList(boards.values)
 		for (board in boardList) {

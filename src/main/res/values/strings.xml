@@ -34,4 +34,5 @@
 		<item>Filter: emboss</item>
 	</string-array>
 	<string name="title_activity_main">OpenFood Logging</string>
+	<string name="logging">Logging</string>
 </resources>
