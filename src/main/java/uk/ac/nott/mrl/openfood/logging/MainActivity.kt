@@ -99,7 +99,6 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 		val addresses = mutableSetOf<String>()
 		var logging = false
 		var writer: FileWriter? = null
-		val files = mutableListOf<String>()
 		val names = mapOf(
 				"DF:CF:A8:49:9F:4A" to "OF Test",
 				"C8:5F:91:F8:A8:A6" to "OF Spatula",
@@ -183,7 +182,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)
 
-		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
 		setSupportActionBar(toolbar)
 
@@ -294,7 +293,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 				val gyro = board.getModule(GyroBmi160::class.java)
 				gyro.configure()
 						.odr(GyroBmi160.OutputDataRate.ODR_25_HZ)
-						.commit();
+						.commit()
 				gyro.packedAngularVelocity()
 						.addRouteAsync { source ->
 							source.stream { data, env ->
