@@ -29,13 +29,13 @@ import com.mbientlab.metawear.module.GyroBmi160
 import com.mbientlab.metawear.module.Led
 import com.mbientlab.metawear.module.Settings
 import kotlinx.android.synthetic.main.activity_navigation.*
-import uk.ac.nott.mrl.openfood.sensor.Sensor
-import uk.ac.nott.mrl.openfood.sensor.SensorClickListener
-import uk.ac.nott.mrl.openfood.sensor.SensorListAdapterHolder
-import uk.ac.nott.mrl.openfood.sensor.SensorListAdapter
 import uk.ac.nott.mrl.openfood.logging.DeviceListFragment
 import uk.ac.nott.mrl.openfood.logging.DeviceLogger
 import uk.ac.nott.mrl.openfood.playback.PlaybackCreatorActivity
+import uk.ac.nott.mrl.openfood.sensor.Sensor
+import uk.ac.nott.mrl.openfood.sensor.SensorClickListener
+import uk.ac.nott.mrl.openfood.sensor.SensorListAdapter
+import uk.ac.nott.mrl.openfood.sensor.SensorListAdapterHolder
 import java.util.*
 
 
@@ -131,9 +131,10 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		super.onStart()
 		bindService(Intent(this, BtleService::class.java), this, Context.BIND_AUTO_CREATE)
 		adapter.setSelected(getSharedPreferences(PREF_ID, 0).getStringSet(PREF_LOGGED, mutableSetOf()))
-		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+				|| ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 			Log.i(TAG, "Request permission")
-			ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_CONTACTS), PERMISSION_CODE)
+			ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE), PERMISSION_CODE)
 		} else {
 			navigateTo(R.id.nav_logging)
 		}

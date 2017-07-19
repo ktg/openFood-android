@@ -44,11 +44,11 @@
 			android:configChanges="orientation|keyboardHidden|screenSize"
 			android:screenOrientation="landscape"
 			android:label="@string/title_activity_playback"
-			android:parentActivityName=".NavigationActivity"
+			android:parentActivityName=".playback.PlaybackCreatorActivity"
 			android:theme="@style/FullscreenTheme">
 			<meta-data
 				android:name="android.support.PARENT_ACTIVITY"
-				android:value="uk.ac.nott.mrl.openfood.NavigationActivity" />
+				android:value="uk.ac.nott.mrl.openfood.playback.PlaybackCreatorActivity" />
 		</activity>
 	</application>
 
