@@ -29,18 +29,17 @@ import com.mbientlab.metawear.module.GyroBmi160
 import com.mbientlab.metawear.module.Led
 import com.mbientlab.metawear.module.Settings
 import kotlinx.android.synthetic.main.activity_navigation.*
-import uk.ac.nott.mrl.openfood.device.Device
-import uk.ac.nott.mrl.openfood.device.DeviceClickListener
-import uk.ac.nott.mrl.openfood.device.DeviceList
-import uk.ac.nott.mrl.openfood.device.DeviceListAdapter
+import uk.ac.nott.mrl.openfood.sensor.Sensor
+import uk.ac.nott.mrl.openfood.sensor.SensorClickListener
+import uk.ac.nott.mrl.openfood.sensor.SensorListAdapterHolder
+import uk.ac.nott.mrl.openfood.sensor.SensorListAdapter
 import uk.ac.nott.mrl.openfood.logging.DeviceListFragment
 import uk.ac.nott.mrl.openfood.logging.DeviceLogger
-import uk.ac.nott.mrl.openfood.logging.LogListFragment
 import uk.ac.nott.mrl.openfood.playback.PlaybackCreatorActivity
 import java.util.*
 
 
-class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, ServiceConnection, DeviceList {
+class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, ServiceConnection, SensorListAdapterHolder {
 	companion object {
 		val PREF_ID = "OF-LOG-PREFS"
 		val PREF_LOGGED = "LOGGED_ADDRESSES"
@@ -51,7 +50,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 
 	private var bluetoothLEService: BtleService.LocalBinder? = null
 	private val logger = DeviceLogger()
-	override val adapter = DeviceListAdapter()
+	override val adapter = SensorListAdapter()
 
 	override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
 		bluetoothLEService = service as BtleService.LocalBinder
@@ -77,26 +76,26 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 				startLogging()
 			}
 		}
-		adapter.clickListener = object : DeviceClickListener {
-			override fun onClick(device: Device) {
+		adapter.clickListener = object : SensorClickListener {
+			override fun onClick(sensor: Sensor) {
 				getSharedPreferences(PREF_ID, 0).edit().putStringSet(PREF_LOGGED, adapter.getSelected()).apply()
 			}
 		}
-		adapter.longClickListener = object : DeviceClickListener {
-			override fun onClick(device: Device) {
+		adapter.longClickListener = object : SensorClickListener {
+			override fun onClick(sensor: Sensor) {
 				val builder = AlertDialog.Builder(this@NavigationActivity)
 				val input = EditText(this@NavigationActivity)
-				input.setText(device.name)
-				builder.setTitle("Rename " + device.name)
+				input.setText(sensor.name)
+				builder.setTitle("Rename " + sensor.name)
 						.setView(input)
 						.setPositiveButton("Rename", { dialog, _ ->
-							if (device.board == null) {
+							if (sensor.board == null) {
 								val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-								val bleDevice = bluetoothManager.adapter.getRemoteDevice(device.address)
-								device.board = bluetoothLEService?.getMetaWearBoard(bleDevice)
+								val bleDevice = bluetoothManager.adapter.getRemoteDevice(sensor.address)
+								sensor.board = bluetoothLEService?.getMetaWearBoard(bleDevice)
 							}
 
-							device.board?.getModule(Settings::class.java)
+							sensor.board?.getModule(Settings::class.java)
 									?.editBleAdConfig()
 									?.deviceName(input.text.toString())
 									?.commit()
@@ -197,13 +196,13 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		loggingButton.setImageResource(R.drawable.ic_play_arrow_black_24dp)
 		loggingProgress.visibility = View.INVISIBLE
 
-		for (device in adapter.devices) {
+		for (device in adapter.sensors) {
 			disconnect(device)
 		}
 		adapter.notifyDataSetChanged()
 	}
 
-	private fun connectSensor(sensor: Device) {
+	private fun connectSensor(sensor: Sensor) {
 		Log.i(TAG, "Connecting to " + sensor.address)
 		sensor.board?.let {
 			it.connectAsync(1000).continueWith { task ->
@@ -270,13 +269,13 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		}
 	}
 
-	private fun disconnect(device: Device) {
-		if (device.board?.isConnected == true) {
-			Log.i(TAG, "Disconnecting from " + device.address)
-			device.board?.tearDown()
-			device.board?.getModule(Led::class.java)?.stop(true)
-			device.board?.disconnectAsync()
-			device.board = null
+	private fun disconnect(sensor: Sensor) {
+		if (sensor.board?.isConnected == true) {
+			Log.i(TAG, "Disconnecting from " + sensor.address)
+			sensor.board?.tearDown()
+			sensor.board?.getModule(Led::class.java)?.stop(true)
+			sensor.board?.disconnectAsync()
+			sensor.board = null
 		}
 	}
 
@@ -286,12 +285,6 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 				supportFragmentManager
 						.beginTransaction()
 						.replace(R.id.content, DeviceListFragment())
-						.commit()
-			}
-			R.id.nav_logs -> {
-				supportFragmentManager
-						.beginTransaction()
-						.replace(R.id.content, LogListFragment())
 						.commit()
 			}
 			R.id.nav_playback -> {

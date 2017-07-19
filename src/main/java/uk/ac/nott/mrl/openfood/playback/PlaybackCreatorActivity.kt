@@ -11,12 +11,12 @@ import android.view.View
 import kotlinx.android.synthetic.main.activity_playback_creator.*
 import uk.ac.nott.mrl.openfood.NavigationActivity
 import uk.ac.nott.mrl.openfood.R
-import uk.ac.nott.mrl.openfood.device.*
-import uk.ac.nott.mrl.openfood.device.Device
+import uk.ac.nott.mrl.openfood.sensor.*
+import uk.ac.nott.mrl.openfood.sensor.Sensor
 import uk.ac.nott.mrl.openfood.logging.DeviceListFragment
 import java.io.File
 
-class PlaybackCreatorActivity : AppCompatActivity(), DeviceList, VideoSelector {
+class PlaybackCreatorActivity : AppCompatActivity(), SensorListAdapterHolder, VideoSelector {
 	inner class SectionsPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
 
 		val pages = listOf(VideoListFragment(), DeviceListFragment())
@@ -31,7 +31,7 @@ class PlaybackCreatorActivity : AppCompatActivity(), DeviceList, VideoSelector {
 	}
 
 	private lateinit var pagerAdapter: SectionsPagerAdapter
-	override val adapter = DeviceListAdapter()
+	override val adapter = SensorListAdapter()
 	override var selectedVideo: File? = null
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,8 +65,8 @@ class PlaybackCreatorActivity : AppCompatActivity(), DeviceList, VideoSelector {
 				validate()
 			}
 		})
-		adapter.clickListener = object : DeviceClickListener {
-			override fun onClick(device: Device) {
+		adapter.clickListener = object : SensorClickListener {
+			override fun onClick(sensor: Sensor) {
 				validate()
 			}
 		}

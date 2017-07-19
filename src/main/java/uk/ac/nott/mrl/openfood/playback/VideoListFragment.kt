@@ -11,10 +11,6 @@ import kotlinx.android.synthetic.main.fragment_list.view.*
 import uk.ac.nott.mrl.openfood.R
 
 class VideoListFragment : Fragment() {
-	companion object {
-		val TAG = VideoListFragment::class.java.simpleName
-	}
-
 	private val adapter = VideoListAdapter()
 
 	override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {

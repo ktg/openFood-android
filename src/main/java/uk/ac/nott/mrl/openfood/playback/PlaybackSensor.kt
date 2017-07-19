@@ -1,12 +1,10 @@
 package uk.ac.nott.mrl.openfood.playback
 
-import android.util.Log
 import com.mbientlab.metawear.MetaWearBoard
 import com.mbientlab.metawear.data.Acceleration
 
 class PlaybackSensor(address: String) {
 	companion object {
-		val TAG = PlaybackSensor::class.java.simpleName
 		val DIFFERENCE = 0.1f
 		val TIMEOUT = 3000
 	}

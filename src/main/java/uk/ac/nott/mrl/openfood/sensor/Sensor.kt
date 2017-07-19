@@ -1,9 +1,9 @@
-package uk.ac.nott.mrl.openfood.device
+package uk.ac.nott.mrl.openfood.sensor
 
 import com.mbientlab.metawear.MetaWearBoard
 import com.mbientlab.metawear.module.Led
 
-class Device(address: String, name: String) {
+class Sensor(address: String, name: String) {
 	val address = address
 	var name = name
 	var rssi = Integer.MIN_VALUE

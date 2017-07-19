@@ -17,29 +17,29 @@ import android.view.ViewGroup
 import com.mbientlab.metawear.MetaWearBoard
 import kotlinx.android.synthetic.main.fragment_list.view.*
 import uk.ac.nott.mrl.openfood.R
-import uk.ac.nott.mrl.openfood.device.DeviceList
+import uk.ac.nott.mrl.openfood.sensor.SensorListAdapterHolder
 import java.util.*
 
 class DeviceListFragment : Fragment() {
 	private val scanCallback = object : ScanCallback() {
 		override fun onScanResult(callbackType: Int, result: ScanResult) {
 			Log.i(TAG, result.device.name + ", " + result.device.address + ": " + result.rssi)
-			if (context is DeviceList) {
-				(context as DeviceList).adapter.updateDevice(result)
+			if (context is SensorListAdapterHolder) {
+				(context as SensorListAdapterHolder).adapter.updateDevice(result)
 			}
 		}
 	}
 
 	companion object {
-		val TAG = DeviceListFragment::class.java.simpleName
+		val TAG = DeviceListFragment::class.java.simpleName!!
 	}
 
 	override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 		val view = inflater!!.inflate(R.layout.fragment_list, container, false)
 
 		view.deviceList.layoutManager = LinearLayoutManager(context)
-		if (context is DeviceList) {
-			view.deviceList?.adapter = (context as DeviceList).adapter
+		if (context is SensorListAdapterHolder) {
+			view.deviceList?.adapter = (context as SensorListAdapterHolder).adapter
 			Log.i(TAG, "Attached adapter " + view?.deviceList?.adapter)
 		}
 
@@ -48,7 +48,7 @@ class DeviceListFragment : Fragment() {
 
 	override fun onAttach(context: Context?) {
 		super.onAttach(context)
-		if (context is DeviceList) {
+		if (context is SensorListAdapterHolder) {
 			view?.deviceList?.adapter = context.adapter
 			Log.i(TAG, "Attached adapter " + view?.deviceList?.adapter)
 		}
