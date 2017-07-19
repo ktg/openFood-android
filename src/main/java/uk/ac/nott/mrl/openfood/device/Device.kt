@@ -1,13 +1,14 @@
-package uk.ac.nott.mrl.openfood.logging
+package uk.ac.nott.mrl.openfood.device
 
 import com.mbientlab.metawear.MetaWearBoard
 import com.mbientlab.metawear.module.Led
 
 class Device(address: String, name: String) {
 	val address = address
-	val name = name
+	var name = name
 	var rssi = Integer.MIN_VALUE
 	var board: MetaWearBoard? = null
+	var error = false
 	private var _selected = false
 	var selected: Boolean
 		get() = _selected
@@ -20,7 +21,7 @@ class Device(address: String, name: String) {
 	var timestamp = 0L
 
 	fun isConnected() : Boolean {
-		return board != null && board!!.isConnected
+		return board?.isConnected == true
 	}
 
 	fun disconnect() {

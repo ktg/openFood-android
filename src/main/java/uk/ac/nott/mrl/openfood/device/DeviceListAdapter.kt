@@ -1,4 +1,4 @@
-package uk.ac.nott.mrl.openfood.logging
+package uk.ac.nott.mrl.openfood.device
 
 import android.bluetooth.le.ScanResult
 import android.os.SystemClock
@@ -6,7 +6,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import kotlinx.android.synthetic.main.device_item.view.*
+import kotlinx.android.synthetic.main.list_item_device.view.*
 import uk.ac.nott.mrl.openfood.R
 import java.util.*
 
@@ -20,6 +20,20 @@ class DeviceListAdapter : RecyclerView.Adapter<DeviceListAdapter.DeviceViewHolde
 			//Log.i("TIME", "Time: " + (SystemClock.elapsedRealtimeNanos() - scan.timestampNanos))
 			if (device.isConnected()) {
 				rootView.signalIcon.setImageResource(R.drawable.ic_tap_and_play_black_24dp)
+			} else if(device.error) {
+				if (device.rssi == Integer.MIN_VALUE) {
+					rootView.signalIcon.setImageResource(R.drawable.ic_signal_cellular_null_black_24dp)
+				} else if (SystemClock.elapsedRealtimeNanos() - device.timestamp > 10000000000) {
+					rootView.signalIcon.setImageResource(R.drawable.ic_signal_cellular_connected_no_internet_0_bar_black_24dp)
+				} else if (device.rssi < -96) {
+					rootView.signalIcon.setImageResource(R.drawable.ic_signal_cellular_connected_no_internet_1_bar_black_24dp)
+				} else if (device.rssi < -80) {
+					rootView.signalIcon.setImageResource(R.drawable.ic_signal_cellular_connected_no_internet_2_bar_black_24dp)
+				} else if (device.rssi < -64) {
+					rootView.signalIcon.setImageResource(R.drawable.ic_signal_cellular_connected_no_internet_3_bar_black_24dp)
+				} else {
+					rootView.signalIcon.setImageResource(R.drawable.ic_signal_cellular_connected_no_internet_4_bar_black_24dp)
+				}
 			} else if (device.rssi == Integer.MIN_VALUE) {
 				rootView.signalIcon.setImageResource(R.drawable.ic_signal_cellular_null_black_24dp)
 			} else if (SystemClock.elapsedRealtimeNanos() - device.timestamp > 10000000000) {
@@ -36,20 +50,27 @@ class DeviceListAdapter : RecyclerView.Adapter<DeviceListAdapter.DeviceViewHolde
 
 			rootView.checkBox.isEnabled = true
 			rootView.checkBox.isChecked = device.selected
-			rootView.setOnClickListener { view ->
-				clickListener?.onClick(view)
+			rootView.setOnClickListener { _ ->
+				device.selected = !device.selected
+				rootView.checkBox.isChecked = device.selected
+				clickListener?.onClick(device)
+			}
+			rootView.setOnLongClickListener {
+				longClickListener?.onClick(device)
+				longClickListener != null
 			}
 		}
 	}
 
 	private val deviceMap = TreeMap<String, Device>()
-	var clickListener: View.OnClickListener? = null
+	var clickListener: DeviceClickListener? = null
+	var longClickListener: DeviceClickListener? = null
 	val devices: Collection<Device>
 		get() = deviceMap.values
 
 	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DeviceViewHolder? {
 		val layoutInflater = LayoutInflater.from(parent.context)
-		val root = layoutInflater.inflate(R.layout.device_item, parent, false)
+		val root = layoutInflater.inflate(R.layout.list_item_device, parent, false)
 		return DeviceViewHolder(root)
 	}
 
@@ -100,6 +121,7 @@ class DeviceListAdapter : RecyclerView.Adapter<DeviceListAdapter.DeviceViewHolde
 		val device = deviceMap.computeIfAbsent(scan.device.address, { key ->
 			Device(key, scan.device.name)
 		})
+		device.name = scan.device.name
 		device.rssi = scan.rssi
 		device.timestamp = scan.timestampNanos
 		deviceMap.put(device.address, device)
