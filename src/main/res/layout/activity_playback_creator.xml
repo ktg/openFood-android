@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical"
+	tools:context="uk.ac.nott.mrl.openfood.playback.PlaybackCreatorActivity">
+
+	<android.support.v7.widget.Toolbar
+		android:id="@+id/toolbar"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:background="?attr/colorPrimary"
+		android:elevation="2dp"
+		android:theme="@style/AppTheme.AppBarOverlay"
+		app:layout_scrollFlags="scroll|enterAlways"
+		app:popupTheme="@style/AppTheme.PopupOverlay"
+		app:title="@string/app_name" />
+
+	<android.support.v4.view.ViewPager
+		android:id="@+id/pager"
+		android:layout_width="match_parent"
+		android:layout_height="0dp"
+		android:layout_weight="1"
+		app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content">
+
+		<Button
+			android:id="@+id/backButton"
+			style="@style/Widget.AppCompat.Button.Borderless"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:drawableStart="@drawable/ic_keyboard_arrow_left_black_24dp"
+			android:onClick="backPage"
+			android:text="@string/back"
+			android:visibility="gone" />
+
+		<Space
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_weight="1" />
+
+		<Button
+			android:id="@+id/nextButton"
+			style="@style/Widget.AppCompat.Button.Borderless"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:drawableEnd="@drawable/ic_keyboard_arrow_right_black_24dp"
+			android:onClick="nextPage"
+			android:text="@string/next" />
+
+		<Button
+			android:id="@+id/createButton"
+			style="@style/Widget.AppCompat.Button.Borderless"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:onClick="createPlayback"
+			android:text="@string/create"
+			android:visibility="gone" />
+	</LinearLayout>
+</LinearLayout>

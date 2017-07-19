@@ -21,14 +21,34 @@
 		<service android:name="com.mbientlab.metawear.android.BtleService" />
 
 		<activity
-			android:name=".logging.MainActivity"
-			android:label="@string/title_activity_main"
+			android:name=".NavigationActivity"
+			android:label="@string/title_activity_navigation"
 			android:theme="@style/AppTheme">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
+		</activity>
+		<activity
+			android:name=".playback.PlaybackCreatorActivity"
+			android:label="@string/title_activity_create_playback"
+			android:parentActivityName=".NavigationActivity"
+			android:theme="@style/AppTheme">
+			<meta-data
+				android:name="android.support.PARENT_ACTIVITY"
+				android:value="uk.ac.nott.mrl.openfood.NavigationActivity" />
+		</activity>
+		<activity
+			android:name=".playback.PlaybackActivity"
+			android:configChanges="orientation|keyboardHidden|screenSize"
+			android:screenOrientation="landscape"
+			android:label="@string/title_activity_playback"
+			android:parentActivityName=".NavigationActivity"
+			android:theme="@style/FullscreenTheme">
+			<meta-data
+				android:name="android.support.PARENT_ACTIVITY"
+				android:value="uk.ac.nott.mrl.openfood.NavigationActivity" />
 		</activity>
 	</application>
 
