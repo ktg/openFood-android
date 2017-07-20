@@ -13,13 +13,13 @@ import uk.ac.nott.mrl.openfood.NavigationActivity
 import uk.ac.nott.mrl.openfood.R
 import uk.ac.nott.mrl.openfood.sensor.*
 import uk.ac.nott.mrl.openfood.sensor.Sensor
-import uk.ac.nott.mrl.openfood.logging.DeviceListFragment
+import uk.ac.nott.mrl.openfood.sensor.SensorListFragment
 import java.io.File
 
 class PlaybackCreatorActivity : AppCompatActivity(), SensorListAdapterHolder, VideoSelector {
 	inner class SectionsPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
 
-		val pages = listOf(VideoListFragment(), DeviceListFragment())
+		val pages = listOf(VideoListFragment(), SensorListFragment())
 
 		override fun getItem(position: Int): Fragment {
 			return pages[position]

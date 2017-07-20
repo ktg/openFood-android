@@ -1,6 +1,7 @@
 package uk.ac.nott.mrl.openfood
 
 import android.Manifest
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.ComponentName
 import android.content.Context
@@ -29,7 +30,7 @@ import com.mbientlab.metawear.module.GyroBmi160
 import com.mbientlab.metawear.module.Led
 import com.mbientlab.metawear.module.Settings
 import kotlinx.android.synthetic.main.activity_navigation.*
-import uk.ac.nott.mrl.openfood.logging.DeviceListFragment
+import uk.ac.nott.mrl.openfood.sensor.SensorListFragment
 import uk.ac.nott.mrl.openfood.logging.DeviceLogger
 import uk.ac.nott.mrl.openfood.logging.LogListFragment
 import uk.ac.nott.mrl.openfood.playback.PlaybackCreatorActivity
@@ -45,7 +46,8 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		val PREF_ID = "OF-LOG-PREFS"
 		val PREF_LOGGED = "LOGGED_ADDRESSES"
 		val PREF_PLAYBACK = "PLAYBACK_ADDRESSES"
-		private val PERMISSION_CODE = 4572
+		private val REQUEST_PERMISSION_CODE = 4572
+		private val REQUEST_BLUETOOTH_CODE = 4574
 		private val TAG = NavigationActivity::class.java.simpleName
 	}
 
@@ -84,6 +86,9 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		}
 		adapter.longClickListener = object : SensorClickListener {
 			override fun onClick(sensor: Sensor) {
+				if(sensor.board?.isConnected == true) {
+					return
+				}
 				val builder = AlertDialog.Builder(this@NavigationActivity)
 				val input = EditText(this@NavigationActivity)
 				input.setText(sensor.name)
@@ -94,9 +99,17 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 				}
 
 				sensor.board?.let {
-					val led = it.getModule(Led::class.java)
-					led.editPattern(Led.Color.RED, Led.PatternPreset.BLINK).commit()
-					led.play()
+					it.connectAsync(1000).continueWith { task ->
+						if (task.isFaulted) {
+							Log.i(TAG, sensor.address + " connection failed: " + task.error.localizedMessage)
+						} else {
+							Log.i(TAG, sensor.address + " connected")
+							val led = it.getModule(Led::class.java)
+							led.editPattern(Led.Color.RED, Led.PatternPreset.BLINK).commit()
+							led.play()
+						}
+					}
+
 					builder.setTitle("Rename " + sensor.name)
 							.setView(input)
 							.setPositiveButton("Rename", { dialog, _ ->
@@ -115,8 +128,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 								dialog.cancel()
 							})
 							.setOnDismissListener {
-								led.editPattern(Led.Color.RED, Led.PatternPreset.BLINK).commit()
-								led.play()
+								disconnect(sensor)
 							}
 							.show()
 				}
@@ -144,12 +156,22 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		super.onStart()
 		bindService(Intent(this, BtleService::class.java), this, Context.BIND_AUTO_CREATE)
 		adapter.setSelected(getSharedPreferences(PREF_ID, 0).getStringSet(PREF_LOGGED, mutableSetOf()))
+		permissionRequests()
+	}
+
+	private fun permissionRequests() {
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
 				|| ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 			Log.i(TAG, "Request permission")
-			ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE), PERMISSION_CODE)
+			ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_PERMISSION_CODE)
 		} else {
-			navigateTo(R.id.nav_logging)
+			val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+			if(!bluetoothManager.adapter.isEnabled) {
+				val intentBtEnabled = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+				startActivityForResult(intentBtEnabled, REQUEST_BLUETOOTH_CODE)
+			} else {
+				navigateTo(R.id.nav_logging)
+			}
 		}
 	}
 
@@ -167,16 +189,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 	}
 
 	override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-		when (requestCode) {
-			PERMISSION_CODE -> {
-				Log.i(TAG, "Permission = " + grantResults[0])
-				// If request is cancelled, the result arrays are empty.
-				if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-					navigateTo(R.id.nav_logging)
-				}
-				return
-			}
-		}
+		permissionRequests()
 	}
 
 	private fun startLogging() {
@@ -186,7 +199,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 			Log.i(TAG, "Starting logging")
 			for (device in selected) {
 				if (device.board == null) {
-					Log.i(TAG, "Logging " + device)
+					Log.i(TAG, "Logging " + device.address)
 					val bleDevice = bluetoothManager.adapter.getRemoteDevice(device.address)
 					device.board = bluetoothLEService?.getMetaWearBoard(bleDevice)
 					Log.i(TAG, "Board: " + device.board)
@@ -219,16 +232,25 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 	private fun connectSensor(sensor: Sensor) {
 		Log.i(TAG, "Connecting to " + sensor.address)
 		sensor.board?.let {
+			sensor.connecting = true
+			adapter.update(sensor.address)
 			it.connectAsync(1000).continueWith { task ->
 				if (task.isFaulted) {
 					Log.i(TAG, "Failed to connect to metawear")
 					Log.i(TAG, task.error.localizedMessage)
-					sensor.error = true
 					if (sensor.selected) {
 						connectSensor(sensor)
+					} else {
+						sensor.connecting = false
+						runOnUiThread {
+							adapter.update(sensor.address)
+						}
 					}
 				} else {
-					sensor.error = false
+					sensor.connecting = false
+					runOnUiThread {
+						adapter.update(sensor.address)
+					}
 					Log.i(TAG, "Connected to " + sensor.address)
 					val accelerometer = it.getModule(Accelerometer::class.java)
 					accelerometer.configure()
@@ -238,6 +260,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 							.addRouteAsync { source ->
 								source.stream { data, env ->
 									val casted = data.value(Acceleration::class.java)
+									sensor.timestamp = System.currentTimeMillis()
 									logger.log(String.format(Locale.US, "%s,%s,%s,%.4f,%.4f,%.4f,%s%n",
 											data.formattedTimestamp(),
 											env[0].toString(),
@@ -260,6 +283,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 							.addRouteAsync { source ->
 								source.stream { data, env ->
 									val casted = data.value(AngularVelocity::class.java)
+									sensor.timestamp = System.currentTimeMillis()
 									logger.log(String.format(Locale.US, "%s,%s,%s,%.4f,%.4f,%.4f,%s%n",
 											data.formattedTimestamp(),
 											env[0].toString(),
@@ -291,6 +315,8 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 			sensor.board?.disconnectAsync()
 			sensor.board = null
 		}
+		sensor.connecting = false
+		adapter.update(sensor.address)
 	}
 
 	private fun navigateTo(id: Int) {
@@ -298,7 +324,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 			R.id.nav_logging -> {
 				supportFragmentManager
 						.beginTransaction()
-						.replace(R.id.content, DeviceListFragment())
+						.replace(R.id.content, SensorListFragment())
 						.commit()
 			}
 			R.id.nav_logs -> {

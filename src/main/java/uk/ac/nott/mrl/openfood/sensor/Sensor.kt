@@ -8,7 +8,7 @@ class Sensor(address: String, name: String) {
 	var name = name
 	var rssi = Integer.MIN_VALUE
 	var board: MetaWearBoard? = null
-	var error = false
+	var connecting = false
 	private var _selected = false
 	var selected: Boolean
 		get() = _selected

@@ -1,4 +1,4 @@
-package uk.ac.nott.mrl.openfood.logging
+package uk.ac.nott.mrl.openfood.sensor
 
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.ScanCallback
@@ -17,13 +17,13 @@ import android.view.ViewGroup
 import com.mbientlab.metawear.MetaWearBoard
 import kotlinx.android.synthetic.main.fragment_list.view.*
 import uk.ac.nott.mrl.openfood.R
-import uk.ac.nott.mrl.openfood.sensor.SensorListAdapterHolder
 import java.util.*
 
-class DeviceListFragment : Fragment() {
+
+class SensorListFragment : Fragment() {
 	private val scanCallback = object : ScanCallback() {
 		override fun onScanResult(callbackType: Int, result: ScanResult) {
-			Log.i(TAG, result.device.name + ", " + result.device.address + ": " + result.rssi)
+			//Log.i(TAG, result.device.name + ", " + result.device.address + ": " + result.rssi)
 			if (context is SensorListAdapterHolder) {
 				(context as SensorListAdapterHolder).adapter.updateDevice(result)
 			}
@@ -31,7 +31,7 @@ class DeviceListFragment : Fragment() {
 	}
 
 	companion object {
-		val TAG = DeviceListFragment::class.java.simpleName!!
+		val TAG = SensorListFragment::class.java.simpleName!!
 	}
 
 	override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {

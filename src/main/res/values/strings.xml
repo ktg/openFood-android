@@ -27,7 +27,6 @@
 
 	<string name="playback">Playback</string>
 
-	<string name="hello_blank_fragment">Hello blank fragment</string>
 	<string name="title_activity_create_playback">CreatePlaybackActivity</string>
 	<string name="title_activity_playback">PlaybackActivity</string>
 	<string name="back">Back</string>
