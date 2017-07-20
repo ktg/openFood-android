@@ -9,6 +9,10 @@
 			android:icon="@drawable/ic_bluetooth_searching_black_24dp"
 			android:title="@string/logging" />
 		<item
+			android:id="@+id/nav_logs"
+			android:icon="@drawable/ic_library_books_black_24dp"
+			android:title="@string/logs" />
+		<item
 			android:id="@+id/nav_playback"
 			android:icon="@drawable/ic_menu_slideshow"
 			android:title="@string/playback" />

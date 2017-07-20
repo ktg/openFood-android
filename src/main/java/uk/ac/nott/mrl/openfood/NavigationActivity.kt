@@ -31,6 +31,7 @@ import com.mbientlab.metawear.module.Settings
 import kotlinx.android.synthetic.main.activity_navigation.*
 import uk.ac.nott.mrl.openfood.logging.DeviceListFragment
 import uk.ac.nott.mrl.openfood.logging.DeviceLogger
+import uk.ac.nott.mrl.openfood.logging.LogListFragment
 import uk.ac.nott.mrl.openfood.playback.PlaybackCreatorActivity
 import uk.ac.nott.mrl.openfood.sensor.Sensor
 import uk.ac.nott.mrl.openfood.sensor.SensorClickListener
@@ -86,27 +87,39 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 				val builder = AlertDialog.Builder(this@NavigationActivity)
 				val input = EditText(this@NavigationActivity)
 				input.setText(sensor.name)
-				builder.setTitle("Rename " + sensor.name)
-						.setView(input)
-						.setPositiveButton("Rename", { dialog, _ ->
-							if (sensor.board == null) {
-								val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-								val bleDevice = bluetoothManager.adapter.getRemoteDevice(sensor.address)
-								sensor.board = bluetoothLEService?.getMetaWearBoard(bleDevice)
+				if (sensor.board == null) {
+					val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+					val bleDevice = bluetoothManager.adapter.getRemoteDevice(sensor.address)
+					sensor.board = bluetoothLEService?.getMetaWearBoard(bleDevice)
+				}
+
+				sensor.board?.let {
+					val led = it.getModule(Led::class.java)
+					led.editPattern(Led.Color.RED, Led.PatternPreset.BLINK).commit()
+					led.play()
+					builder.setTitle("Rename " + sensor.name)
+							.setView(input)
+							.setPositiveButton("Rename", { dialog, _ ->
+								if (sensor.board == null) {
+
+								}
+
+								it.getModule(Settings::class.java)
+										.editBleAdConfig()
+										.deviceName(input.text.toString())
+										.commit()
+
+								dialog.dismiss()
+							})
+							.setNegativeButton("Cancel", { dialog, _ ->
+								dialog.cancel()
+							})
+							.setOnDismissListener {
+								led.editPattern(Led.Color.RED, Led.PatternPreset.BLINK).commit()
+								led.play()
 							}
-
-							sensor.board?.getModule(Settings::class.java)
-									?.editBleAdConfig()
-									?.deviceName(input.text.toString())
-									?.commit()
-
-							dialog.dismiss()
-						})
-						.setNegativeButton("Cancel", { dialog, _ ->
-							dialog.cancel()
-						})
-
-						.show()
+							.show()
+				}
 			}
 		}
 
@@ -286,6 +299,12 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 				supportFragmentManager
 						.beginTransaction()
 						.replace(R.id.content, DeviceListFragment())
+						.commit()
+			}
+			R.id.nav_logs -> {
+				supportFragmentManager
+						.beginTransaction()
+						.replace(R.id.content, LogListFragment())
 						.commit()
 			}
 			R.id.nav_playback -> {
