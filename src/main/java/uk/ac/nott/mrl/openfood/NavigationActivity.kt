@@ -73,8 +73,6 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		setContentView(R.layout.activity_navigation)
 		setSupportActionBar(toolbar)
 
-		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
 		loggingButton.setOnClickListener { _ ->
 			if (logger.isLogging) {
 				stopLogging()
@@ -203,18 +201,16 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 	}
 
 	private fun startLogging() {
+		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		val selected = adapter.getSelectedDevices()
 		if (!selected.isEmpty()) {
 			Log.i(TAG, "Starting logging")
+			logger.start()
+			loggingButton.setImageResource(R.drawable.ic_stop_black_24dp)
+			loggingProgress.visibility = View.VISIBLE
+
 			for (sensor in selected) {
 				connectSensor(sensor)
-			}
-
-			val found = selected.any { it.board != null }
-			if (found) {
-				logger.start()
-				loggingButton.setImageResource(R.drawable.ic_stop_black_24dp)
-				loggingProgress.visibility = View.VISIBLE
 			}
 		}
 	}
@@ -229,6 +225,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 			disconnectSensor(device)
 		}
 		connectedHanlder.removeCallbacks(connectedRunnable)
+		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 	}
 
 	private fun updateSensor(sensor: Sensor) {
@@ -239,7 +236,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 
 	private fun connectSensor(sensor: Sensor) {
 		Log.i(TAG, "Connecting to " + sensor.address)
-		if(sensor.isConnected()) {
+		if(!logger.isLogging || sensor.isConnected()) {
 			return
 		}
 		if(sensor.board == null) {
@@ -341,7 +338,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 				if(sensor.timestamp + SensorListAdapter.TIMEOUT < now) {
 					updateSensor(sensor)
 				}
-			} else if(sensor.selected) {
+			} else if(sensor.selected && !sensor.connecting) {
 				connectSensor(sensor)
 			}
 		}
