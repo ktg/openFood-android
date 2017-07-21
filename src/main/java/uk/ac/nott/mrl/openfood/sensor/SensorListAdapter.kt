@@ -120,7 +120,6 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 	fun updateSensor(sensor: Sensor) {
 		val index = sensorMap.keys.toList().indexOf(sensor.address)
 		if(index > -1) {
-			Log.i(TAG, "Updating sensor " + sensor.address + " @ " + index)
 			notifyItemChanged(index)
 		}
 	}
