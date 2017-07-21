@@ -9,25 +9,10 @@ class Sensor(address: String, name: String) {
 	var rssi = Integer.MIN_VALUE
 	var board: MetaWearBoard? = null
 	var connecting = false
-	private var _selected = false
-	var selected: Boolean
-		get() = _selected
-		set(value) {
-			_selected = value
-			if(!value) {
-				disconnect()
-			}
-		}
+	var selected: Boolean = false
 	var timestamp = 0L
 
 	fun isConnected() : Boolean {
 		return board?.isConnected == true
-	}
-
-	fun disconnect() {
-		board?.tearDown()
-		board?.getModule(Led::class.java)?.stop(true)
-		board?.disconnectAsync()
-		board = null
 	}
 }

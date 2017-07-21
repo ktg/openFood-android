@@ -9,7 +9,9 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.support.design.widget.NavigationView
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
@@ -30,14 +32,10 @@ import com.mbientlab.metawear.module.GyroBmi160
 import com.mbientlab.metawear.module.Led
 import com.mbientlab.metawear.module.Settings
 import kotlinx.android.synthetic.main.activity_navigation.*
-import uk.ac.nott.mrl.openfood.sensor.SensorListFragment
 import uk.ac.nott.mrl.openfood.logging.DeviceLogger
 import uk.ac.nott.mrl.openfood.logging.LogListFragment
 import uk.ac.nott.mrl.openfood.playback.PlaybackCreatorActivity
-import uk.ac.nott.mrl.openfood.sensor.Sensor
-import uk.ac.nott.mrl.openfood.sensor.SensorClickListener
-import uk.ac.nott.mrl.openfood.sensor.SensorListAdapter
-import uk.ac.nott.mrl.openfood.sensor.SensorListAdapterHolder
+import uk.ac.nott.mrl.openfood.sensor.*
 import java.util.*
 
 
@@ -54,6 +52,10 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 	private var bluetoothLEService: BtleService.LocalBinder? = null
 	private val logger = DeviceLogger()
 	override val adapter = SensorListAdapter()
+	private val connectedHanlder = Handler(Looper.getMainLooper())
+	private val connectedRunnable = Runnable {
+		checkConnected()
+	}
 
 	override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
 		bluetoothLEService = service as BtleService.LocalBinder
@@ -82,11 +84,18 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		adapter.clickListener = object : SensorClickListener {
 			override fun onClick(sensor: Sensor) {
 				getSharedPreferences(PREF_ID, 0).edit().putStringSet(PREF_LOGGED, adapter.getSelected()).apply()
+				if(logger.isLogging){
+					if(sensor.selected) {
+						connectSensor(sensor)
+					} else {
+						disconnectSensor(sensor)
+					}
+				}
 			}
 		}
 		adapter.longClickListener = object : SensorClickListener {
 			override fun onClick(sensor: Sensor) {
-				if(sensor.board?.isConnected == true) {
+				if (sensor.board?.isConnected == true) {
 					return
 				}
 				val builder = AlertDialog.Builder(this@NavigationActivity)
@@ -128,7 +137,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 								dialog.cancel()
 							})
 							.setOnDismissListener {
-								disconnect(sensor)
+								disconnectSensor(sensor)
 							}
 							.show()
 				}
@@ -166,7 +175,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 			ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_PERMISSION_CODE)
 		} else {
 			val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-			if(!bluetoothManager.adapter.isEnabled) {
+			if (!bluetoothManager.adapter.isEnabled) {
 				val intentBtEnabled = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
 				startActivityForResult(intentBtEnabled, REQUEST_BLUETOOTH_CODE)
 			} else {
@@ -193,18 +202,11 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 	}
 
 	private fun startLogging() {
-		val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 		val selected = adapter.getSelectedDevices()
 		if (!selected.isEmpty()) {
 			Log.i(TAG, "Starting logging")
-			for (device in selected) {
-				if (device.board == null) {
-					Log.i(TAG, "Logging " + device.address)
-					val bleDevice = bluetoothManager.adapter.getRemoteDevice(device.address)
-					device.board = bluetoothLEService?.getMetaWearBoard(bleDevice)
-					Log.i(TAG, "Board: " + device.board)
-					connectSensor(device)
-				}
+			for (sensor in selected) {
+				connectSensor(sensor)
 			}
 
 			val found = selected.any { it.board != null }
@@ -214,7 +216,6 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 				loggingProgress.visibility = View.VISIBLE
 			}
 		}
-		adapter.notifyDataSetChanged()
 	}
 
 	private fun stopLogging() {
@@ -224,16 +225,31 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		loggingProgress.visibility = View.INVISIBLE
 
 		for (device in adapter.sensors) {
-			disconnect(device)
+			disconnectSensor(device)
 		}
-		adapter.notifyDataSetChanged()
+		connectedHanlder.removeCallbacks(connectedRunnable)
+	}
+
+	private fun updateSensor(sensor: Sensor) {
+		runOnUiThread {
+			adapter.updateSensor(sensor)
+		}
 	}
 
 	private fun connectSensor(sensor: Sensor) {
 		Log.i(TAG, "Connecting to " + sensor.address)
+		if(sensor.isConnected()) {
+			return
+		}
+		if(sensor.board == null) {
+			val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+			val bleDevice = bluetoothManager.adapter.getRemoteDevice(sensor.address)
+			sensor.board = bluetoothLEService?.getMetaWearBoard(bleDevice)
+		}
+
 		sensor.board?.let {
 			sensor.connecting = true
-			adapter.update(sensor.address)
+			updateSensor(sensor)
 			it.connectAsync(1000).continueWith { task ->
 				if (task.isFaulted) {
 					Log.i(TAG, "Failed to connect to metawear")
@@ -242,15 +258,12 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 						connectSensor(sensor)
 					} else {
 						sensor.connecting = false
-						runOnUiThread {
-							adapter.update(sensor.address)
-						}
+						updateSensor(sensor)
 					}
 				} else {
 					sensor.connecting = false
-					runOnUiThread {
-						adapter.update(sensor.address)
-					}
+					updateSensor(sensor)
+					checkConnected()
 					Log.i(TAG, "Connected to " + sensor.address)
 					val accelerometer = it.getModule(Accelerometer::class.java)
 					accelerometer.configure()
@@ -307,16 +320,31 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		}
 	}
 
-	private fun disconnect(sensor: Sensor) {
+	private fun disconnectSensor(sensor: Sensor) {
 		if (sensor.board?.isConnected == true) {
 			Log.i(TAG, "Disconnecting from " + sensor.address)
 			sensor.board?.tearDown()
 			sensor.board?.getModule(Led::class.java)?.stop(true)
-			sensor.board?.disconnectAsync()
-			sensor.board = null
+			sensor.board?.disconnectAsync()?.continueWith { _ ->
+				updateSensor(sensor)
+			}
 		}
 		sensor.connecting = false
-		adapter.update(sensor.address)
+		updateSensor(sensor)
+	}
+
+	private fun checkConnected() {
+		for (sensor in adapter.sensors) {
+			val now = System.currentTimeMillis()
+			if(sensor.board?.isConnected == true) {
+				if(sensor.timestamp + SensorListAdapter.TIMEOUT < now) {
+					updateSensor(sensor)
+				}
+			} else if(sensor.selected) {
+				connectSensor(sensor)
+			}
+		}
+		connectedHanlder.postDelayed(connectedRunnable, 1000)
 	}
 
 	private fun navigateTo(id: Int) {

@@ -42,14 +42,19 @@
 		<activity
 			android:name=".playback.PlaybackActivity"
 			android:configChanges="orientation|keyboardHidden|screenSize"
-			android:screenOrientation="landscape"
 			android:label="@string/title_activity_playback"
 			android:parentActivityName=".playback.PlaybackCreatorActivity"
+			android:screenOrientation="landscape"
 			android:theme="@style/FullscreenTheme">
 			<meta-data
 				android:name="android.support.PARENT_ACTIVITY"
 				android:value="uk.ac.nott.mrl.openfood.playback.PlaybackCreatorActivity" />
 		</activity>
+		<activity
+			android:name=".sensor.FullscreenActivity"
+			android:configChanges="orientation|keyboardHidden|screenSize"
+			android:label="@string/title_activity_fullscreen"
+			android:theme="@style/FullscreenTheme"></activity>
 	</application>
 
 </manifest>

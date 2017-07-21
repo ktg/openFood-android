@@ -4,6 +4,7 @@ import android.bluetooth.le.ScanResult
 import android.os.SystemClock
 import android.support.v4.content.ContextCompat
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -60,6 +61,7 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 
 	companion object {
 		val TIMEOUT = 3000
+		val TAG = SensorListAdapter::class.java.simpleName
 	}
 
 	private val sensorMap = TreeMap<String, Sensor>()
@@ -112,23 +114,34 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 					})
 				}
 				.forEach { it.selected = true }
+		notifyDataSetChanged()
 	}
 
-	fun update(address: String) {
-		val index = sensorMap.keys.toList().indexOf(address)
+	fun updateSensor(sensor: Sensor) {
+		val index = sensorMap.keys.toList().indexOf(sensor.address)
 		if(index > -1) {
+			Log.i(TAG, "Updating sensor " + sensor.address + " @ " + index)
 			notifyItemChanged(index)
 		}
 	}
 
 	fun updateDevice(scan: ScanResult) {
+		var created = false
 		val sensor = sensorMap.computeIfAbsent(scan.device.address, { key ->
+			created = true
 			Sensor(key, scan.device.name)
 		})
 		sensor.name = scan.device.name
 		sensor.rssi = scan.rssi
 		sensor.timestamp = scan.timestampNanos
 		sensorMap.put(sensor.address, sensor)
-		notifyDataSetChanged()
+		val index = sensorMap.keys.toList().indexOf(sensor.address)
+		if(index > -1) {
+			if(created) {
+				notifyItemInserted(index)
+			} else {
+				notifyItemChanged(index)
+			}
+		}
 	}
 }
