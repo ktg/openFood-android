@@ -4,7 +4,6 @@ import android.bluetooth.le.ScanResult
 import android.os.SystemClock
 import android.support.v4.content.ContextCompat
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,7 +18,7 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 		fun setDevice(sensor: Sensor) {
 			rootView.nameText.text = sensor.name
 			rootView.macAddressText.text = sensor.address
-			rootView.signalIcon.setColorFilter(ContextCompat.getColor(rootView.context,android.R.color.black))
+			rootView.signalIcon.setColorFilter(ContextCompat.getColor(rootView.context, android.R.color.black))
 			//Log.i("TIME", "Time: " + (SystemClock.elapsedRealtimeNanos() - scan.timestampNanos))
 			if (sensor.isConnected()) {
 				if (sensor.timestamp + TIMEOUT < System.currentTimeMillis()) {
@@ -28,7 +27,7 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 				} else {
 					rootView.signalIcon.setImageResource(R.drawable.ic_tap_and_play_black_24dp)
 				}
-			} else if(sensor.connecting) {
+			} else if (sensor.connecting) {
 				rootView.signalIcon.setColorFilter(ContextCompat.getColor(rootView.context, android.R.color.darker_gray))
 				rootView.signalIcon.setImageResource(R.drawable.ic_tap_and_play_black_24dp)
 			} else if (sensor.rssi == Integer.MIN_VALUE) {
@@ -61,7 +60,6 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 
 	companion object {
 		val TIMEOUT = 3000
-		val TAG = SensorListAdapter::class.java.simpleName
 	}
 
 	private val sensorMap = TreeMap<String, Sensor>()
@@ -98,7 +96,7 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 
 	fun getSelectedDevices(): Collection<Sensor> {
 		val selected = mutableListOf<Sensor>()
-		for ((_,sensor) in sensorMap) {
+		for ((_, sensor) in sensorMap) {
 			if (sensor.selected) {
 				selected.add(sensor)
 			}
@@ -119,7 +117,7 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 
 	fun updateSensor(sensor: Sensor) {
 		val index = sensorMap.keys.toList().indexOf(sensor.address)
-		if(index > -1) {
+		if (index > -1) {
 			notifyItemChanged(index)
 		}
 	}
@@ -135,8 +133,8 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 		sensor.timestamp = scan.timestampNanos
 		sensorMap.put(sensor.address, sensor)
 		val index = sensorMap.keys.toList().indexOf(sensor.address)
-		if(index > -1) {
-			if(created) {
+		if (index > -1) {
+			if (created) {
 				notifyItemInserted(index)
 			} else {
 				notifyItemChanged(index)
