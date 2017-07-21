@@ -83,8 +83,8 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		adapter.clickListener = object : SensorClickListener {
 			override fun onClick(sensor: Sensor) {
 				getSharedPreferences(PREF_ID, 0).edit().putStringSet(PREF_LOGGED, adapter.getSelected()).apply()
-				if(logger.isLogging){
-					if(sensor.selected) {
+				if (logger.isLogging) {
+					if (sensor.selected) {
 						connectSensor(sensor)
 					} else {
 						disconnectSensor(sensor)
@@ -236,10 +236,10 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 
 	private fun connectSensor(sensor: Sensor) {
 		Log.i(TAG, "Connecting to " + sensor.address)
-		if(!logger.isLogging || sensor.isConnected()) {
+		if (!logger.isLogging || sensor.isConnected()) {
 			return
 		}
-		if(sensor.board == null) {
+		if (sensor.board == null) {
 			val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 			val bleDevice = bluetoothManager.adapter.getRemoteDevice(sensor.address)
 			sensor.board = bluetoothLEService?.getMetaWearBoard(bleDevice)
@@ -249,15 +249,12 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 			sensor.connecting = true
 			updateSensor(sensor)
 			it.connectAsync(1000).continueWith { task ->
-				if (task.isFaulted) {
+				if (!logger.isLogging || !sensor.selected) {
+					disconnectSensor(sensor)
+				} else if (task.isFaulted) {
 					Log.i(TAG, "Failed to connect to metawear")
 					Log.i(TAG, task.error.localizedMessage)
-					if (sensor.selected) {
-						connectSensor(sensor)
-					} else {
-						sensor.connecting = false
-						updateSensor(sensor)
-					}
+					connectSensor(sensor)
 				} else {
 					sensor.connecting = false
 					updateSensor(sensor)
@@ -334,11 +331,11 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 	private fun checkConnected() {
 		for (sensor in adapter.sensors) {
 			val now = System.currentTimeMillis()
-			if(sensor.board?.isConnected == true) {
-				if(sensor.timestamp + SensorListAdapter.TIMEOUT < now) {
+			if (sensor.board?.isConnected == true) {
+				if (sensor.timestamp + SensorListAdapter.TIMEOUT < now) {
 					updateSensor(sensor)
 				}
-			} else if(sensor.selected && !sensor.connecting) {
+			} else if (sensor.selected && !sensor.connecting) {
 				connectSensor(sensor)
 			}
 		}
