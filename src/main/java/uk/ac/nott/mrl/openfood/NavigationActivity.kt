@@ -44,6 +44,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		val PREF_ID = "OF-LOG-PREFS"
 		val PREF_LOGGED = "LOGGED_ADDRESSES"
 		val PREF_PLAYBACK = "PLAYBACK_ADDRESSES"
+		val PREF_VIDEO = "PLAYBACK_VIDEO"
 		private val REQUEST_PERMISSION_CODE = 4572
 		private val REQUEST_BLUETOOTH_CODE = 4574
 		private val TAG = NavigationActivity::class.java.simpleName

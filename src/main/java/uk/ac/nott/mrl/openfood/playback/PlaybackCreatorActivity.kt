@@ -76,9 +76,12 @@ class PlaybackCreatorActivity : AppCompatActivity(), SensorListAdapterHolder, Vi
 		super.onStart()
 		val sharedPreferences = getSharedPreferences(NavigationActivity.PREF_ID, 0)
 		if (sharedPreferences.contains(NavigationActivity.PREF_PLAYBACK)) {
-			adapter.setSelected(sharedPreferences.getStringSet(NavigationActivity.PREF_PLAYBACK, mutableSetOf()))
+			adapter.setSelected(sharedPreferences.getStringSet(NavigationActivity.PREF_PLAYBACK, setOf()))
 		} else {
-			adapter.setSelected(sharedPreferences.getStringSet(NavigationActivity.PREF_LOGGED, mutableSetOf()))
+			adapter.setSelected(sharedPreferences.getStringSet(NavigationActivity.PREF_LOGGED, setOf()))
+		}
+		if(sharedPreferences.contains(NavigationActivity.PREF_VIDEO)) {
+			selectedVideo = File(sharedPreferences.getString(NavigationActivity.PREF_VIDEO, ""))
 		}
 	}
 
@@ -97,6 +100,11 @@ class PlaybackCreatorActivity : AppCompatActivity(), SensorListAdapterHolder, Vi
 	}
 
 	override fun validate() {
+		val sharedPreferences = getSharedPreferences(NavigationActivity.PREF_ID, 0)
+		sharedPreferences.edit()
+				.putStringSet(NavigationActivity.PREF_PLAYBACK, adapter.getSelected())
+				.putString(NavigationActivity.PREF_VIDEO, selectedVideo?.absolutePath)
+				.apply()
 		createButton.isEnabled = !adapter.getSelected().isEmpty() && selectedVideo != null
 	}
 }
