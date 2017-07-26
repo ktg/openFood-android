@@ -97,9 +97,6 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 				if (sensor.board?.isConnected == true) {
 					return
 				}
-				val builder = AlertDialog.Builder(this@NavigationActivity)
-				val input = EditText(this@NavigationActivity)
-				input.setText(sensor.name)
 				if (sensor.board == null) {
 					val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 					val bleDevice = bluetoothManager.adapter.getRemoteDevice(sensor.address)
@@ -118,8 +115,12 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 						}
 					}
 
-					builder.setTitle("Rename " + sensor.name)
-							.setView(input)
+					val builder = AlertDialog.Builder(this@NavigationActivity)
+					val view = layoutInflater.inflate(R.layout.edit_name, null, false)
+					val input = view.findViewById<EditText>(R.id.edit_name)
+					input.append(sensor.name)
+					val dialog = builder.setTitle("Rename " + sensor.name)
+							.setView(view)
 							.setPositiveButton("Rename", { dialog, _ ->
 								if (sensor.board == null) {
 
@@ -138,7 +139,9 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 							.setOnDismissListener {
 								disconnectSensor(sensor)
 							}
-							.show()
+							.create()
+					dialog.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+					dialog.show()
 				}
 			}
 		}
@@ -323,6 +326,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 			sensor.board?.disconnectAsync()?.continueWith { _ ->
 				updateSensor(sensor)
 			}
+			sensor.board = null
 		}
 		sensor.connecting = false
 		updateSensor(sensor)

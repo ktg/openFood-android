@@ -5,7 +5,7 @@ buildscript {
 		jcenter()
 	}
 	dependencies {
-		classpath 'com.android.tools.build:gradle:3.0.0-alpha7'
+		classpath 'com.android.tools.build:gradle:3.0.0-alpha8'
 		classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 	}
 }
@@ -25,7 +25,7 @@ repositories {
 
 android {
 	compileSdkVersion 26
-	buildToolsVersion "26.0.0"
+	buildToolsVersion "26.0.1"
 	compileOptions {
 		sourceCompatibility JavaVersion.VERSION_1_8
 		targetCompatibility JavaVersion.VERSION_1_8
@@ -34,7 +34,7 @@ android {
 		abortOnError false
 	}
 	defaultConfig {
-		applicationId "uk.ac.nott.mrl.openfood.logging"
+		applicationId "uk.ac.nott.mrl.openfood"
 		minSdkVersion 21
 		targetSdkVersion 26
 		versionCode 1
@@ -49,14 +49,12 @@ android {
 }
 
 dependencies {
-	implementation 'com.mbientlab:metawear:3.0.32'
+	implementation 'com.android.support:appcompat-v7:26.0.0'
+	implementation 'com.android.support:design:26.0.0'
+	implementation 'com.android.support:recyclerview-v7:26.0.0'
+	implementation 'com.android.support:support-v4:26.0.0'
 	implementation 'com.android.support.constraint:constraint-layout:1.0.2'
-	implementation 'com.android.support:appcompat-v7:26.0.0-beta2'
-	implementation 'com.android.support:recyclerview-v7:26.0.0-beta2'
-	implementation 'com.android.support:design:26.0.0-beta2'
 	implementation 'com.github.bumptech.glide:glide:4.0.0-RC1'
+	implementation 'com.mbientlab:metawear:3.0.32'
 	implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
-	implementation 'com.android.support:support-v4:26.0.0-beta2'
-
-	annotationProcessor 'com.github.bumptech.glide:compiler:4.0.0-RC1'
 }
