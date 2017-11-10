@@ -271,13 +271,18 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 							.addRouteAsync { source ->
 								source.stream { data, env ->
 									val casted = data.value(Acceleration::class.java)
-									sensor.timestamp = System.currentTimeMillis()
+									val now = System.currentTimeMillis()
+									val timedout = sensor.hasTimedOut(now)
+									sensor.timestamp = now
 									logger.log(String.format(Locale.US, "%s,%s,%s,%.4f,%.4f,%.4f,%s%n",
 											data.formattedTimestamp(),
 											env[0].toString(),
 											"accel",
 											casted.x(), casted.y(), casted.z(),
 											"g"))
+									if(timedout) {
+										updateSensor(sensor)
+									}
 								}
 							}
 							.continueWith { task1 ->
@@ -294,13 +299,18 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 							.addRouteAsync { source ->
 								source.stream { data, env ->
 									val casted = data.value(AngularVelocity::class.java)
-									sensor.timestamp = System.currentTimeMillis()
+									val now = System.currentTimeMillis()
+									val timedout = sensor.hasTimedOut(now)
+									sensor.timestamp = now
 									logger.log(String.format(Locale.US, "%s,%s,%s,%.4f,%.4f,%.4f,%s%n",
 											data.formattedTimestamp(),
 											env[0].toString(),
 											"gyro",
 											casted.x(), casted.y(), casted.z(),
 											"\u00B0/s"))
+									if(timedout) {
+										updateSensor(sensor)
+									}
 								}
 							}
 							.continueWith { task1 ->
@@ -336,7 +346,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		for (sensor in adapter.sensors) {
 			val now = System.currentTimeMillis()
 			if (sensor.board?.isConnected == true) {
-				if (sensor.timestamp + SensorListAdapter.TIMEOUT < now) {
+				if (sensor.hasTimedOut(now)) {
 					updateSensor(sensor)
 				}
 			} else if (sensor.selected && !sensor.connecting) {

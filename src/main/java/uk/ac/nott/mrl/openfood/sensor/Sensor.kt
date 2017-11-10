@@ -4,6 +4,10 @@ import com.mbientlab.metawear.MetaWearBoard
 import com.mbientlab.metawear.module.Led
 
 class Sensor(address: String, name: String) {
+	companion object {
+	    val TIMEOUT = 2000
+	}
+
 	val address = address
 	var name = name
 	var rssi = Integer.MIN_VALUE
@@ -14,5 +18,9 @@ class Sensor(address: String, name: String) {
 
 	fun isConnected() : Boolean {
 		return board?.isConnected == true
+	}
+
+	fun hasTimedOut(now: Long): Boolean {
+		return timestamp + TIMEOUT < now
 	}
 }

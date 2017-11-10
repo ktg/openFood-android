@@ -21,7 +21,7 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 			rootView.signalIcon.setColorFilter(ContextCompat.getColor(rootView.context, android.R.color.black))
 			//Log.i("TIME", "Time: " + (SystemClock.elapsedRealtimeNanos() - scan.timestampNanos))
 			if (sensor.isConnected()) {
-				if (sensor.timestamp + TIMEOUT < System.currentTimeMillis()) {
+				if (sensor.hasTimedOut(System.currentTimeMillis())) {
 					rootView.signalIcon.setColorFilter(ContextCompat.getColor(rootView.context, android.R.color.holo_red_dark))
 					rootView.signalIcon.setImageResource(R.drawable.ic_phonelink_erase_black_24dp)
 				} else {
@@ -56,10 +56,6 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 				longClickListener != null
 			}
 		}
-	}
-
-	companion object {
-		val TIMEOUT = 3000
 	}
 
 	private val sensorMap = TreeMap<String, Sensor>()
