@@ -12,46 +12,48 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import android.support.design.widget.NavigationView
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import android.support.v4.view.GravityCompat
-import android.support.v7.app.ActionBarDrawerToggle
-import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
 import android.widget.EditText
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.edit
+import androidx.core.view.GravityCompat
+import androidx.fragment.app.transaction
+import com.google.android.material.navigation.NavigationView
 import com.mbientlab.metawear.android.BtleService
 import com.mbientlab.metawear.data.Acceleration
 import com.mbientlab.metawear.data.AngularVelocity
-import com.mbientlab.metawear.module.Accelerometer
-import com.mbientlab.metawear.module.GyroBmi160
-import com.mbientlab.metawear.module.Led
-import com.mbientlab.metawear.module.Settings
+import com.mbientlab.metawear.module.*
+import com.mbientlab.metawear.module.Timer
 import kotlinx.android.synthetic.main.activity_navigation.*
 import uk.ac.nott.mrl.openfood.logging.DeviceLogger
 import uk.ac.nott.mrl.openfood.logging.LogListFragment
 import uk.ac.nott.mrl.openfood.playback.PlaybackCreatorActivity
 import uk.ac.nott.mrl.openfood.sensor.*
+import java.io.File
 import java.util.*
-
 
 class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, ServiceConnection, SensorListAdapterHolder {
 	companion object {
-		val PREF_ID = "OF-LOG-PREFS"
-		val PREF_LOGGED = "LOGGED_ADDRESSES"
-		val PREF_PLAYBACK = "PLAYBACK_ADDRESSES"
-		val PREF_VIDEO = "PLAYBACK_VIDEO"
-		private val REQUEST_PERMISSION_CODE = 4572
-		private val REQUEST_BLUETOOTH_CODE = 4574
+		const val PREF_ID = "OF-LOG-PREFS"
+		const val PREF_LOGGED = "LOGGED_ADDRESSES"
+		const val PREF_PLAYBACK = "PLAYBACK_ADDRESSES"
+		const val PREF_VIDEO = "PLAYBACK_VIDEO"
+		private const val REQUEST_PERMISSION_CODE = 4572
+		private const val REQUEST_BLUETOOTH_CODE = 4574
+		private const val TEMP_SAMPLE_PERIOD = 100
 		private val TAG = NavigationActivity::class.java.simpleName
 	}
 
 	private var bluetoothLEService: BtleService.LocalBinder? = null
 	private val logger = DeviceLogger()
+	private var action = ""
 	override val adapter = SensorListAdapter()
 	private val connectedHanlder = Handler(Looper.getMainLooper())
 	private val connectedRunnable = Runnable {
@@ -82,7 +84,9 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		}
 		adapter.clickListener = object : SensorClickListener {
 			override fun onClick(sensor: Sensor) {
-				getSharedPreferences(PREF_ID, 0).edit().putStringSet(PREF_LOGGED, adapter.getSelected()).apply()
+				getSharedPreferences(PREF_ID, 0).edit {
+					putStringSet(PREF_LOGGED, adapter.getSelected())
+				}
 				if (logger.isLogging) {
 					if (sensor.selected) {
 						connectSensor(sensor)
@@ -121,7 +125,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 					input.append(sensor.name)
 					val dialog = builder.setTitle("Rename " + sensor.name)
 							.setView(view)
-							.setPositiveButton("Rename", { dialog, _ ->
+							.setPositiveButton("Rename") { dialog, _ ->
 								if (sensor.board == null) {
 
 								}
@@ -132,10 +136,10 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 										.commit()
 
 								dialog.dismiss()
-							})
-							.setNegativeButton("Cancel", { dialog, _ ->
+							}
+							.setNegativeButton("Cancel") { dialog, _ ->
 								dialog.cancel()
-							})
+							}
 							.setOnDismissListener {
 								disconnectSensor(sensor)
 							}
@@ -150,7 +154,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		drawer_layout.addDrawerListener(toggle)
 		toggle.syncState()
 
-		logger.directory = getExternalFilesDir("logs")
+		logger.directory = File(filesDir, "logs")
 
 		nav_view.setNavigationItemSelectedListener(this)
 	}
@@ -171,10 +175,9 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 	}
 
 	private fun permissionRequests() {
-		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-				|| ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 			Log.i(TAG, "Request permission")
-			ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_PERMISSION_CODE)
+			ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_PERMISSION_CODE)
 		} else {
 			val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 			if (!bluetoothManager.adapter.isEnabled) {
@@ -194,8 +197,15 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 	}
 
 	override fun onNavigationItemSelected(item: MenuItem): Boolean {
-		navigateTo(item.itemId)
-		drawer_layout.closeDrawer(GravityCompat.START)
+		item.isEnabled = true
+		when (item.itemId) {
+			R.id.nav_action_none -> action = ""
+			R.id.nav_action_drink -> action = "drink"
+			R.id.nav_action_held -> action = "held"
+			R.id.nav_action_rest -> action = "rest"
+			else -> navigateTo(item.itemId)
+		}
+
 		return true
 	}
 
@@ -268,25 +278,26 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 							.odr(10f)
 							.commit()
 					accelerometer.acceleration()
-							.addRouteAsync { source ->
-								source.stream { data, env ->
+							.addRouteAsync {
+								it.stream { data, env ->
 									val casted = data.value(Acceleration::class.java)
 									val now = System.currentTimeMillis()
 									val timedout = sensor.hasTimedOut(now)
 									sensor.timestamp = now
-									logger.log(String.format(Locale.US, "%s,%s,%s,%.4f,%.4f,%.4f,%s%n",
+									logger.log(String.format(Locale.US, "%s,%s,%s,%s,%.4f,%.4f,%.4f,%s%n",
 											data.formattedTimestamp(),
 											env[0].toString(),
+											action,
 											"accel",
 											casted.x(), casted.y(), casted.z(),
 											"g"))
-									if(timedout) {
+									if (timedout) {
 										updateSensor(sensor)
 									}
 								}
 							}
-							.continueWith { task1 ->
-								task1.result.setEnvironment(0, sensor.address)
+							.continueWith {
+								it.result.setEnvironment(0, sensor.address)
 								accelerometer.packedAcceleration().start()
 								accelerometer.start()
 							}
@@ -296,27 +307,56 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 							.odr(GyroBmi160.OutputDataRate.ODR_25_HZ)
 							.commit()
 					gyro.packedAngularVelocity()
-							.addRouteAsync { source ->
-								source.stream { data, env ->
+							.addRouteAsync {
+								it.stream { data, env ->
 									val casted = data.value(AngularVelocity::class.java)
 									val now = System.currentTimeMillis()
 									val timedout = sensor.hasTimedOut(now)
 									sensor.timestamp = now
-									logger.log(String.format(Locale.US, "%s,%s,%s,%.4f,%.4f,%.4f,%s%n",
+									logger.log(String.format(Locale.US, "%s,%s,%s,%s,%.4f,%.4f,%.4f,%s%n",
 											data.formattedTimestamp(),
 											env[0].toString(),
+											action,
 											"gyro",
 											casted.x(), casted.y(), casted.z(),
 											"\u00B0/s"))
-									if(timedout) {
+									if (timedout) {
 										updateSensor(sensor)
 									}
 								}
 							}
-							.continueWith { task1 ->
-								task1.result.setEnvironment(0, sensor.address)
+							.continueWith {
+								it.result.setEnvironment(0, sensor.address)
 								gyro.packedAngularVelocity().start()
 								gyro.start()
+							}
+
+					val timer = it.getModule(Timer::class.java)
+					val temp = it.getModule(Temperature::class.java)
+					val tempSensor = temp.findSensors(Temperature.SensorType.PRESET_THERMISTOR)?.get(0)
+					tempSensor
+							?.addRouteAsync {
+								it.stream { data, env ->
+									val now = System.currentTimeMillis()
+									val timedout = sensor.hasTimedOut(now)
+									sensor.timestamp = now
+									logger.log(String.format(Locale.US, "%s,%s,%s,%s,%.4f,,,%s%n",
+											data.formattedTimestamp(),
+											env[0].toString(),
+											action,
+											"temp",
+											data.value(Float::class.javaObjectType),
+											"\u00B0C"))
+									if (timedout) {
+										updateSensor(sensor)
+									}
+								}
+							}
+							?.continueWith {
+								it.result.setEnvironment(0, sensor.address)
+								timer.scheduleAsync(TEMP_SAMPLE_PERIOD, false, tempSensor::read).continueWith {
+									it.result.start()
+								}
 							}
 
 					val led = it.getModule(Led::class.java)
@@ -359,35 +399,34 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 	private fun navigateTo(id: Int) {
 		when (id) {
 			R.id.nav_logging -> {
-				supportFragmentManager
-						.beginTransaction()
-						.replace(R.id.content, SensorListFragment())
-						.commit()
+				supportFragmentManager.transaction {
+					replace(R.id.content, SensorListFragment())
+				}
 			}
 			R.id.nav_logs -> {
-				supportFragmentManager
-						.beginTransaction()
-						.replace(R.id.content, LogListFragment())
-						.commit()
+				supportFragmentManager.transaction {
+					replace(R.id.content, LogListFragment())
+				}
 			}
 			R.id.nav_playback -> {
 				if (logger.isLogging) {
 					val builder = AlertDialog.Builder(this)
 					builder.setTitle("Currently Logging")
 							.setMessage("Leaving now will stop the logging.")
-							.setPositiveButton("Leave", { dialog, _ ->
+							.setPositiveButton("Leave") { dialog, _ ->
 								stopLogging()
 								startActivity(Intent(this, PlaybackCreatorActivity::class.java))
 								dialog.dismiss()
-							})
-							.setNegativeButton("Cancel", { dialog, _ ->
+							}
+							.setNegativeButton("Cancel") { dialog, _ ->
 								dialog.cancel()
-							})
+							}
 							.show()
 				} else {
 					startActivity(Intent(this, PlaybackCreatorActivity::class.java))
 				}
 			}
 		}
+		drawer_layout.closeDrawer(GravityCompat.START)
 	}
 }

@@ -2,13 +2,13 @@ package uk.ac.nott.mrl.openfood.logging
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
-import android.support.v4.content.ContextCompat.startActivity
-import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat.startActivity
+import androidx.core.content.FileProvider
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.list_item_log.view.*
 import uk.ac.nott.mrl.openfood.R
 import java.io.File
@@ -18,7 +18,7 @@ import java.util.*
 
 class LogListAdapter(val context: Context) : RecyclerView.Adapter<LogListAdapter.VideoViewHolder>() {
 	inner class VideoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-		val rootView = view
+		private val rootView = view
 
 		fun setVideo(logFile: File) {
 			rootView.nameText.text = logFile.name
@@ -30,11 +30,11 @@ class LogListAdapter(val context: Context) : RecyclerView.Adapter<LogListAdapter
 			rootView.timeText.text = dateFormatter.format(timestamp)
 			rootView.setOnClickListener { _ ->
 				val intentShareFile = Intent(Intent.ACTION_SEND)
-				val fileWithinMyDir = logFile
 
-				if (fileWithinMyDir.exists()) {
+				if (logFile.exists()) {
 					intentShareFile.type = "text/csv"
-					intentShareFile.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(logFile))
+					val contentUri = FileProvider.getUriForFile(context, "uk.ac.nott.mrl.openfood", logFile)
+					intentShareFile.putExtra(Intent.EXTRA_STREAM, contentUri)
 					intentShareFile.putExtra(Intent.EXTRA_SUBJECT, logFile.name)
 					intentShareFile.putExtra(Intent.EXTRA_TEXT, "Sharing Log File...")
 
@@ -51,7 +51,7 @@ class LogListAdapter(val context: Context) : RecyclerView.Adapter<LogListAdapter
 		private val dateFormatter = SimpleDateFormat("HH:mm E, d MMM", Locale.ENGLISH)
 	}
 
-	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder? {
+	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder {
 		val layoutInflater = LayoutInflater.from(parent.context)
 		val root = layoutInflater.inflate(R.layout.list_item_log, parent, false)
 		return VideoViewHolder(root)

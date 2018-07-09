@@ -9,7 +9,7 @@
 	android:focusable="true"
 	tools:context="uk.ac.nott.mrl.openfood.playback.PlaybackActivity">
 
-	<android.support.v7.widget.Toolbar
+	<androidx.appcompat.widget.Toolbar
 		android:id="@+id/toolbar"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"

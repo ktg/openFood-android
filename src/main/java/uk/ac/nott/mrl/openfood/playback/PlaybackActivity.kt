@@ -9,12 +9,12 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
-import android.support.v4.app.NavUtils
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NavUtils
 import com.mbientlab.metawear.android.BtleService
 import com.mbientlab.metawear.data.Acceleration
 import com.mbientlab.metawear.module.Accelerometer
@@ -34,19 +34,19 @@ class PlaybackActivity : AppCompatActivity(), ServiceConnection {
 		 * Whether or not the system UI should be auto-hidden after
 		 * [AUTO_HIDE_DELAY_MILLIS] milliseconds.
 		 */
-		private val AUTO_HIDE = true
+		private const val AUTO_HIDE = true
 
 		/**
 		 * If [AUTO_HIDE] is set, the number of milliseconds to wait after
 		 * user interaction before hiding the system UI.
 		 */
-		private val AUTO_HIDE_DELAY_MILLIS = 3000
+		private const val AUTO_HIDE_DELAY_MILLIS = 3000
 
 		/**
 		 * Some older devices needs a small delay between UI widget updates
 		 * and a change of the status and navigation bar.
 		 */
-		private val UI_ANIMATION_DELAY = 300
+		private const val UI_ANIMATION_DELAY = 300
 	}
 
 	private val devices = mutableListOf<PlaybackSensor>()
@@ -59,11 +59,11 @@ class PlaybackActivity : AppCompatActivity(), ServiceConnection {
 		// at compile-time and do nothing on earlier devices.
 		videoView.systemUiVisibility =
 				View.SYSTEM_UI_FLAG_LOW_PROFILE or
-						View.SYSTEM_UI_FLAG_FULLSCREEN or
-						View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-						View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-						View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-						View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+				View.SYSTEM_UI_FLAG_FULLSCREEN or
+				View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+				View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+				View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+				View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
 	}
 	private val mShowPart2Runnable = Runnable {
 		// Delayed display of UI elements
@@ -84,7 +84,7 @@ class PlaybackActivity : AppCompatActivity(), ServiceConnection {
 		visibleUI = true
 
 		background.setOnClickListener {
-			Log.i(TAG, "Toggle " + visibleUI)
+			Log.i(TAG, "Toggle $visibleUI")
 			if (visibleUI) {
 				hide()
 			} else {
@@ -224,7 +224,7 @@ class PlaybackActivity : AppCompatActivity(), ServiceConnection {
 		// Show the system bar
 		videoView.systemUiVisibility =
 				View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-						View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+				View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
 		visibleUI = true
 
 		// Schedule a runnable to display UI elements after a delay

@@ -2,11 +2,11 @@ package uk.ac.nott.mrl.openfood.sensor
 
 import android.bluetooth.le.ScanResult
 import android.os.SystemClock
-import android.support.v4.content.ContextCompat
-import android.support.v7.widget.RecyclerView
+import androidx.core.content.ContextCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.list_item_device.view.*
 import uk.ac.nott.mrl.openfood.R
 import java.util.*
@@ -64,7 +64,7 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 	val sensors: Collection<Sensor>
 		get() = sensorMap.values
 
-	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DeviceViewHolder? {
+	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DeviceViewHolder {
 		val layoutInflater = LayoutInflater.from(parent.context)
 		val root = layoutInflater.inflate(R.layout.list_item_device, parent, false)
 		return DeviceViewHolder(root)

@@ -8,12 +8,12 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.os.Bundle
 import android.os.ParcelUuid
-import android.support.v4.app.Fragment
-import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.mbientlab.metawear.MetaWearBoard
 import kotlinx.android.synthetic.main.fragment_list.view.*
 import uk.ac.nott.mrl.openfood.R
@@ -34,8 +34,8 @@ class SensorListFragment : Fragment() {
 		val TAG = SensorListFragment::class.java.simpleName!!
 	}
 
-	override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-		val view = inflater!!.inflate(R.layout.fragment_list, container, false)
+	override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+		val view = inflater.inflate(R.layout.fragment_list, container, false)
 
 		view.deviceList.layoutManager = LinearLayoutManager(context)
 		if (context is SensorListAdapterHolder) {
@@ -63,14 +63,14 @@ class SensorListFragment : Fragment() {
 		super.onStart()
 		val scanSettings = ScanSettings.Builder().build()
 		val scanFilters = Collections.singletonList(ScanFilter.Builder().setServiceUuid(ParcelUuid(MetaWearBoard.METAWEAR_GATT_SERVICE)).build())
-		val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-		bluetoothManager.adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, scanCallback)
+		val bluetoothManager = context?.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?
+		bluetoothManager?.adapter?.bluetoothLeScanner?.startScan(scanFilters, scanSettings, scanCallback)
 		Log.i(TAG, "Scan started")
 	}
 
 	override fun onStop() {
 		super.onStop()
-		val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-		bluetoothManager.adapter.bluetoothLeScanner.stopScan(scanCallback)
+		val bluetoothManager = context?.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?
+		bluetoothManager?.adapter?.bluetoothLeScanner?.stopScan(scanCallback)
 	}
 }

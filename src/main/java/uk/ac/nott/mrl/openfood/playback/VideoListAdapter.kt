@@ -1,12 +1,11 @@
 package uk.ac.nott.mrl.openfood.playback
 
-import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.RequestOptions
+import androidx.recyclerview.widget.RecyclerView
+import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.list_item_video.view.*
 import uk.ac.nott.mrl.openfood.R
 import java.io.File
@@ -18,9 +17,9 @@ class VideoListAdapter : RecyclerView.Adapter<VideoListAdapter.VideoViewHolder>(
 
 		fun setVideo(video: File) {
 			rootView.nameText.text = video.name
-			Glide.with(rootView)
+			Picasso.get()
 					.load(video)
-					.apply(RequestOptions().placeholder(R.drawable.ic_movie_black_24dp))
+					.placeholder(R.drawable.ic_movie_black_24dp)
 					.into(rootView.videoImage)
 			rootView.checkBox.isChecked = videoSelector?.selectedVideo == video
 			rootView.setOnClickListener { _ ->
@@ -44,7 +43,7 @@ class VideoListAdapter : RecyclerView.Adapter<VideoListAdapter.VideoViewHolder>(
 		private val TAG = VideoListAdapter::class.java.simpleName
 	}
 
-	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder? {
+	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder {
 		val layoutInflater = LayoutInflater.from(parent.context)
 		val root = layoutInflater.inflate(R.layout.list_item_video, parent, false)
 		return VideoViewHolder(root)

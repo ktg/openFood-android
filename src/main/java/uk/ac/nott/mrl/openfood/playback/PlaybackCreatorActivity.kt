@@ -2,19 +2,19 @@ package uk.ac.nott.mrl.openfood.playback
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentPagerAdapter
-import android.support.v4.view.ViewPager
-import android.support.v7.app.AppCompatActivity
 import android.view.View
-import kotlinx.android.synthetic.main.activity_playback_creator.*
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentPagerAdapter
+import androidx.viewpager.widget.ViewPager
 import uk.ac.nott.mrl.openfood.NavigationActivity
 import uk.ac.nott.mrl.openfood.R
 import uk.ac.nott.mrl.openfood.sensor.*
 import uk.ac.nott.mrl.openfood.sensor.Sensor
 import uk.ac.nott.mrl.openfood.sensor.SensorListFragment
 import java.io.File
+import kotlinx.android.synthetic.main.activity_playback_creator.*
 
 class PlaybackCreatorActivity : AppCompatActivity(), SensorListAdapterHolder, VideoSelector {
 	inner class SectionsPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {

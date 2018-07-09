@@ -3,7 +3,9 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	tools:showIn="navigation_view">
 
-	<group android:checkableBehavior="single">
+	<group
+		android:id="@+id/nav_group_navigation"
+		android:checkableBehavior="single">
 		<item
 			android:id="@+id/nav_logging"
 			android:icon="@drawable/ic_bluetooth_searching_black_24dp"
@@ -16,5 +18,21 @@
 			android:id="@+id/nav_playback"
 			android:icon="@drawable/ic_menu_slideshow"
 			android:title="@string/playback" />
+	</group>
+	<group
+		android:id="@+id/nav_group_actions"
+		android:checkableBehavior="single">
+		<item
+			android:id="@+id/nav_action_none"
+			android:title="No Action"/>
+		<item
+			android:id="@+id/nav_action_rest"
+			android:title="At Rest"/>
+		<item
+			android:id="@+id/nav_action_held"
+			android:title="Held"/>
+		<item
+			android:id="@+id/nav_action_drink"
+			android:title="Drinking"/>
 	</group>
 </menu>

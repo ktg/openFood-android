@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
 	package="uk.ac.nott.mrl.openfood">
 
 	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 	<uses-permission android:name="android.permission.BLUETOOTH" />
 	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
@@ -12,12 +12,13 @@
 		android:required="true" />
 
 	<application
-		android:allowBackup="true"
+		android:allowBackup="false"
 		android:icon="@mipmap/ic_launcher"
 		android:label="@string/app_name"
 		android:roundIcon="@mipmap/ic_launcher_round"
 		android:supportsRtl="true"
-		android:theme="@style/AppTheme">
+		android:theme="@style/AppTheme"
+		tools:ignore="GoogleAppIndexingWarning">
 		<service android:name="com.mbientlab.metawear.android.BtleService" />
 
 		<activity
@@ -50,11 +51,15 @@
 				android:name="android.support.PARENT_ACTIVITY"
 				android:value="uk.ac.nott.mrl.openfood.playback.PlaybackCreatorActivity" />
 		</activity>
-		<activity
-			android:name=".sensor.FullscreenActivity"
-			android:configChanges="orientation|keyboardHidden|screenSize"
-			android:label="@string/title_activity_fullscreen"
-			android:theme="@style/FullscreenTheme"></activity>
-	</application>
 
+		<provider
+			android:name="androidx.core.content.FileProvider"
+			android:authorities="uk.ac.nott.mrl.openfood"
+			android:exported="false"
+			android:grantUriPermissions="true" >
+			<meta-data
+				android:name="android.support.FILE_PROVIDER_PATHS"
+				android:resource="@xml/paths" />
+		</provider>
+	</application>
 </manifest>
