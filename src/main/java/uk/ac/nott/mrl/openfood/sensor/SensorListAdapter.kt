@@ -2,19 +2,17 @@ package uk.ac.nott.mrl.openfood.sensor
 
 import android.bluetooth.le.ScanResult
 import android.os.SystemClock
-import androidx.core.content.ContextCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.list_item_device.view.*
 import uk.ac.nott.mrl.openfood.R
 import java.util.*
 
 class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolder>() {
-	inner class DeviceViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-		val rootView = view
-
+	inner class DeviceViewHolder(private val rootView: View) : RecyclerView.ViewHolder(rootView) {
 		fun setDevice(sensor: Sensor) {
 			rootView.nameText.text = sensor.name
 			rootView.macAddressText.text = sensor.address
@@ -46,21 +44,21 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 
 			rootView.checkBox.isEnabled = true
 			rootView.checkBox.isChecked = sensor.selected
-			rootView.setOnClickListener { _ ->
+			rootView.setOnClickListener {
 				sensor.selected = !sensor.selected
 				rootView.checkBox.isChecked = sensor.selected
-				clickListener?.onClick(sensor)
+				clickListener?.invoke(sensor)
 			}
 			rootView.setOnLongClickListener {
-				longClickListener?.onClick(sensor)
+				longClickListener?.invoke(sensor)
 				longClickListener != null
 			}
 		}
 	}
 
 	private val sensorMap = TreeMap<String, Sensor>()
-	var clickListener: SensorClickListener? = null
-	var longClickListener: SensorClickListener? = null
+	var clickListener: ((Sensor) -> Unit)? = null
+	var longClickListener: ((Sensor) -> Unit)? = null
 	val sensors: Collection<Sensor>
 		get() = sensorMap.values
 
@@ -73,7 +71,7 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 	override fun onBindViewHolder(holder: DeviceViewHolder, position: Int) {
 		val key = sensorMap.keys.toList()[position]
 		val device = sensorMap[key]
-		device?.let { holder.setDevice(device) }
+		device?.let { holder.setDevice(it) }
 	}
 
 	override fun getItemCount(): Int {
@@ -81,31 +79,19 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 	}
 
 	fun getSelected(): Set<String> {
-		val selected = mutableSetOf<String>()
-		for ((address, sensor) in sensorMap) {
-			if (sensor.selected) {
-				selected.add(address)
-			}
-		}
-		return selected
+		return getSelectedDevices().map { it.address }.toSet()
 	}
 
 	fun getSelectedDevices(): Collection<Sensor> {
-		val selected = mutableListOf<Sensor>()
-		for ((_, sensor) in sensorMap) {
-			if (sensor.selected) {
-				selected.add(sensor)
-			}
-		}
-		return selected
+		return sensorMap.values.filter { it.selected }
 	}
 
 	fun setSelected(selected: Set<String>) {
 		selected
 				.map {
-					sensorMap.computeIfAbsent(it, { key ->
-						Sensor(key, "Not Detected Yet")
-					})
+					sensorMap.getOrPut(it) {
+						Sensor(it, "Not Detected Yet")
+					}
 				}
 				.forEach { it.selected = true }
 		notifyDataSetChanged()
@@ -120,14 +106,14 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 
 	fun updateDevice(scan: ScanResult) {
 		var created = false
-		val sensor = sensorMap.computeIfAbsent(scan.device.address, { key ->
+		val sensor = sensorMap.getOrElse(scan.device.address) {
 			created = true
-			Sensor(key, scan.device.name)
-		})
+			Sensor(scan.device.address, scan.device.name)
+		}
 		sensor.name = scan.device.name
 		sensor.rssi = scan.rssi
 		sensor.timestamp = scan.timestampNanos
-		sensorMap.put(sensor.address, sensor)
+		sensorMap[sensor.address] = sensor
 		val index = sensorMap.keys.toList().indexOf(sensor.address)
 		if (index > -1) {
 			if (created) {

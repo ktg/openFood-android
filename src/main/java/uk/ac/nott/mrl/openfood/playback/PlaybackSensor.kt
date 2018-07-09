@@ -3,14 +3,13 @@ package uk.ac.nott.mrl.openfood.playback
 import com.mbientlab.metawear.MetaWearBoard
 import com.mbientlab.metawear.data.Acceleration
 
-class PlaybackSensor(address: String) {
+class PlaybackSensor(val address: String) {
 	companion object {
-		val DIFFERENCE = 0.02f
-		val TIMEOUT = 3000
-		val COUNT_NEEDED = 10
+		const val DIFFERENCE = 0.02f
+		const val TIMEOUT = 3000
+		const val COUNT_NEEDED = 10
 	}
 
-	val address = address
 	var board: MetaWearBoard? = null
 	private var lastMoved = 0L
 	private var x = Float.MIN_VALUE

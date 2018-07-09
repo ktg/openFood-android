@@ -35,7 +35,10 @@ import kotlinx.android.synthetic.main.activity_navigation.*
 import uk.ac.nott.mrl.openfood.logging.DeviceLogger
 import uk.ac.nott.mrl.openfood.logging.LogListFragment
 import uk.ac.nott.mrl.openfood.playback.PlaybackCreatorActivity
-import uk.ac.nott.mrl.openfood.sensor.*
+import uk.ac.nott.mrl.openfood.sensor.Sensor
+import uk.ac.nott.mrl.openfood.sensor.SensorListAdapter
+import uk.ac.nott.mrl.openfood.sensor.SensorListAdapterHolder
+import uk.ac.nott.mrl.openfood.sensor.SensorListFragment
 import java.io.File
 import java.util.*
 
@@ -75,32 +78,27 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		setContentView(R.layout.activity_navigation)
 		setSupportActionBar(toolbar)
 
-		loggingButton.setOnClickListener { _ ->
+		loggingButton.setOnClickListener {
 			if (logger.isLogging) {
 				stopLogging()
 			} else {
 				startLogging()
 			}
 		}
-		adapter.clickListener = object : SensorClickListener {
-			override fun onClick(sensor: Sensor) {
-				getSharedPreferences(PREF_ID, 0).edit {
-					putStringSet(PREF_LOGGED, adapter.getSelected())
-				}
-				if (logger.isLogging) {
-					if (sensor.selected) {
-						connectSensor(sensor)
-					} else {
-						disconnectSensor(sensor)
-					}
+		adapter.clickListener = { sensor ->
+			getSharedPreferences(PREF_ID, 0).edit {
+				putStringSet(PREF_LOGGED, adapter.getSelected())
+			}
+			if (logger.isLogging) {
+				if (sensor.selected) {
+					connectSensor(sensor)
+				} else {
+					disconnectSensor(sensor)
 				}
 			}
 		}
-		adapter.longClickListener = object : SensorClickListener {
-			override fun onClick(sensor: Sensor) {
-				if (sensor.board?.isConnected == true) {
-					return
-				}
+		adapter.longClickListener = { sensor ->
+			if (sensor.board?.isConnected != true) {
 				if (sensor.board == null) {
 					val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 					val bleDevice = bluetoothManager.adapter.getRemoteDevice(sensor.address)
@@ -108,7 +106,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 				}
 
 				sensor.board?.let {
-					it.connectAsync(1000).continueWith { task ->
+					it.connectAsync().continueWith { task ->
 						if (task.isFaulted) {
 							Log.i(TAG, sensor.address + " connection failed: " + task.error.localizedMessage)
 						} else {
@@ -123,13 +121,10 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 					val view = layoutInflater.inflate(R.layout.edit_name, null, false)
 					val input = view.findViewById<EditText>(R.id.edit_name)
 					input.append(sensor.name)
-					val dialog = builder.setTitle("Rename " + sensor.name)
+					val dialog = builder.setTitle(getString(R.string.rename_dialog_title, sensor.name))
+							.setMessage(getString(R.string.rename_dialog_message, sensor.address))
 							.setView(view)
-							.setPositiveButton("Rename") { dialog, _ ->
-								if (sensor.board == null) {
-
-								}
-
+							.setPositiveButton(R.string.rename_dialog_rename) { dialog, _ ->
 								it.getModule(Settings::class.java)
 										.editBleAdConfig()
 										.deviceName(input.text.toString())
@@ -137,7 +132,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 
 								dialog.dismiss()
 							}
-							.setNegativeButton("Cancel") { dialog, _ ->
+							.setNegativeButton(R.string.raname_dialog_cancel) { dialog, _ ->
 								dialog.cancel()
 							}
 							.setOnDismissListener {
@@ -150,18 +145,18 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 			}
 		}
 
-		val toggle = ActionBarDrawerToggle(this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-		drawer_layout.addDrawerListener(toggle)
+		val toggle = ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
+		drawer.addDrawerListener(toggle)
 		toggle.syncState()
 
 		logger.directory = File(filesDir, "logs")
 
-		nav_view.setNavigationItemSelectedListener(this)
+		navigation.setNavigationItemSelectedListener(this)
 	}
 
 	override fun onBackPressed() {
-		if (drawer_layout.isDrawerOpen(GravityCompat.START)) {
-			drawer_layout.closeDrawer(GravityCompat.START)
+		if (drawer.isDrawerOpen(GravityCompat.START)) {
+			drawer.closeDrawer(GravityCompat.START)
 		} else {
 			super.onBackPressed()
 		}
@@ -214,10 +209,10 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 	}
 
 	private fun startLogging() {
-		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		val selected = adapter.getSelectedDevices()
 		if (!selected.isEmpty()) {
 			Log.i(TAG, "Starting logging")
+			window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 			logger.start()
 			loggingButton.setImageResource(R.drawable.ic_stop_black_24dp)
 			loggingProgress.visibility = View.VISIBLE
@@ -261,7 +256,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 		sensor.board?.let {
 			sensor.connecting = true
 			updateSensor(sensor)
-			it.connectAsync(1000).continueWith { task ->
+			it.connectAsync().continueWith { task ->
 				if (!logger.isLogging || !sensor.selected) {
 					disconnectSensor(sensor)
 				} else if (task.isFaulted) {
@@ -373,7 +368,7 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 			Log.i(TAG, "Disconnecting from " + sensor.address)
 			sensor.board?.tearDown()
 			sensor.board?.getModule(Led::class.java)?.stop(true)
-			sensor.board?.disconnectAsync()?.continueWith { _ ->
+			sensor.board?.disconnectAsync()?.continueWith {
 				updateSensor(sensor)
 			}
 			sensor.board = null
@@ -411,14 +406,14 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 			R.id.nav_playback -> {
 				if (logger.isLogging) {
 					val builder = AlertDialog.Builder(this)
-					builder.setTitle("Currently Logging")
-							.setMessage("Leaving now will stop the logging.")
-							.setPositiveButton("Leave") { dialog, _ ->
+					builder.setTitle(R.string.log_warn_dialog_title)
+							.setMessage(R.string.log_warn_dialog_message)
+							.setPositiveButton(R.string.log_warn_dialog_leave) { dialog, _ ->
 								stopLogging()
 								startActivity(Intent(this, PlaybackCreatorActivity::class.java))
 								dialog.dismiss()
 							}
-							.setNegativeButton("Cancel") { dialog, _ ->
+							.setNegativeButton(R.string.log_warn_dialog_cancel) { dialog, _ ->
 								dialog.cancel()
 							}
 							.show()
@@ -427,6 +422,6 @@ class NavigationActivity : AppCompatActivity(), NavigationView.OnNavigationItemS
 				}
 			}
 		}
-		drawer_layout.closeDrawer(GravityCompat.START)
+		drawer.closeDrawer(GravityCompat.START)
 	}
 }

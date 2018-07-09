@@ -34,7 +34,18 @@
 	<string name="create">Create</string>
 	<string name="logs">Logs</string>
 
-	<string name="title_activity_fullscreen">FullscreenActivity</string>
-	<string name="dummy_button">Dummy Button</string>
-	<string name="dummy_content">DUMMY\nCONTENT</string>
+	<string name="action_none">No Action</string>
+	<string name="action_rest">At Rest</string>
+	<string name="action_held">Held</string>
+	<string name="action_drink">Drinking</string>
+
+	<string name="log_warn_dialog_title">Currently Logging</string>
+	<string name="log_warn_dialog_message">Leaving now will stop the logging.</string>
+	<string name="log_warn_dialog_leave">Leave</string>
+	<string name="log_warn_dialog_cancel">Cancel</string>
+
+	<string name="rename_dialog_title">Rename %s</string>
+	<string name="rename_dialog_rename">Rename</string>
+	<string name="raname_dialog_cancel">Cancel</string>
+	<string name="rename_dialog_message">Rename the sensor %s, which should be flashing red</string>
 </resources>

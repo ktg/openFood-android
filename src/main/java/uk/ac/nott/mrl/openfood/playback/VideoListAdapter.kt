@@ -12,9 +12,7 @@ import java.io.File
 import java.util.*
 
 class VideoListAdapter : RecyclerView.Adapter<VideoListAdapter.VideoViewHolder>() {
-	inner class VideoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-		val rootView = view
-
+	inner class VideoViewHolder(private val rootView: View) : RecyclerView.ViewHolder(rootView) {
 		fun setVideo(video: File) {
 			rootView.nameText.text = video.name
 			Picasso.get()
@@ -27,7 +25,7 @@ class VideoListAdapter : RecyclerView.Adapter<VideoListAdapter.VideoViewHolder>(
 				videoSelector?.selectedVideo = video
 				videoSelector?.validate()
 				rootView.checkBox.isChecked = videoSelector?.selectedVideo == video
-				if(original != null) {
+				if (original != null) {
 					val index = videoMap.toList().indexOf(original)
 					notifyItemChanged(index)
 				}
@@ -60,11 +58,14 @@ class VideoListAdapter : RecyclerView.Adapter<VideoListAdapter.VideoViewHolder>(
 
 	fun scan(directory: File) {
 		Log.i(TAG, directory.absolutePath)
-		for(child in directory.listFiles()) {
-			if(child.isDirectory) {
-				scan(child)
-			} else if(isVideo(child)) {
-				videoMap.add(child)
+		val children = directory.listFiles()
+		if(children != null) {
+			for (child in children) {
+				if (child.isDirectory) {
+					scan(child)
+				} else if (isVideo(child)) {
+					videoMap.add(child)
+				}
 			}
 		}
 	}

@@ -17,22 +17,23 @@
 		<item
 			android:id="@+id/nav_playback"
 			android:icon="@drawable/ic_menu_slideshow"
-			android:title="@string/playback" />
+			android:title="@string/playback"
+			android:visible="false" />
 	</group>
 	<group
 		android:id="@+id/nav_group_actions"
 		android:checkableBehavior="single">
 		<item
 			android:id="@+id/nav_action_none"
-			android:title="No Action"/>
+			android:title="@string/action_none" />
 		<item
 			android:id="@+id/nav_action_rest"
-			android:title="At Rest"/>
+			android:title="@string/action_rest" />
 		<item
 			android:id="@+id/nav_action_held"
-			android:title="Held"/>
+			android:title="@string/action_held" />
 		<item
 			android:id="@+id/nav_action_drink"
-			android:title="Drinking"/>
+			android:title="@string/action_drink" />
 	</group>
 </menu>

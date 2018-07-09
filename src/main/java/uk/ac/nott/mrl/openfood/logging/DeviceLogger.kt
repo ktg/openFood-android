@@ -5,7 +5,9 @@ import java.io.File
 import java.io.FileWriter
 
 class DeviceLogger {
-	private val TAG = DeviceLogger::class.java.simpleName
+	companion object {
+		private val TAG = DeviceLogger::class.java.simpleName
+	}
 	private var writer: FileWriter? = null
 	private var _logging: Boolean = false
 	var directory: File? = null
