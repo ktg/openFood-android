@@ -47,18 +47,18 @@ class SensorListAdapter : RecyclerView.Adapter<SensorListAdapter.DeviceViewHolde
 			rootView.setOnClickListener {
 				sensor.selected = !sensor.selected
 				rootView.checkBox.isChecked = sensor.selected
-				clickListener?.invoke(sensor)
+				clickListener(sensor)
 			}
 			rootView.setOnLongClickListener {
-				longClickListener?.invoke(sensor)
-				longClickListener != null
+				longClickListener(sensor)
+				true
 			}
 		}
 	}
 
 	private val sensorMap = TreeMap<String, Sensor>()
-	var clickListener: ((Sensor) -> Unit)? = null
-	var longClickListener: ((Sensor) -> Unit)? = null
+	var clickListener: (Sensor) -> Unit = {}
+	var longClickListener: (Sensor) -> Unit = {}
 	val sensors: Collection<Sensor>
 		get() = sensorMap.values
 
